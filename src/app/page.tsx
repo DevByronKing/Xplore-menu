@@ -3,6 +3,7 @@ import Link from 'next/link';
 import {
   Activity,
   ArrowRight,
+  BarChart3,
   Flame,
   QrCode,
   Radio,
@@ -38,7 +39,7 @@ export default function HomePage() {
           </p>
         </div>
 
-        {/* Primary CTA to Demo Tenant */}
+        {/* Primary CTA to Demo Tenant & Dashboard */}
         <div className="p-6 rounded-3xl bg-obsidian-900/90 border border-white/10 shadow-2xl space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
             <div className="flex items-center gap-3.5">
@@ -59,14 +60,24 @@ export default function HomePage() {
               </div>
             </div>
 
-            <Link
-              href={`/${DEMO_RESTAURANT.slug}?source=nfc&location=mesa_04`}
-              className="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-gradient-to-r from-brand to-amber-500 text-obsidian-950 font-extrabold text-sm shadow-lg shadow-brand/25 hover:brightness-110 transition-all shrink-0"
-            >
-              <Smartphone className="w-4 h-4" />
-              <span>Abrir Cardápio Social</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+            <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl bg-obsidian-800 hover:bg-obsidian-700 border border-white/15 text-white font-bold text-xs transition-all"
+              >
+                <BarChart3 className="w-4 h-4 text-brand" />
+                <span>Painel Analítico (/dashboard)</span>
+              </Link>
+
+              <Link
+                href={`/${DEMO_RESTAURANT.slug}?source=nfc&location=mesa_04`}
+                className="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-gradient-to-r from-brand to-amber-500 text-obsidian-950 font-extrabold text-xs sm:text-sm shadow-lg shadow-brand/25 hover:brightness-110 transition-all"
+              >
+                <Smartphone className="w-4 h-4" />
+                <span>Abrir Cardápio Social</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
           </div>
 
           {/* Simulate NFC / QR Touchpoints */}
@@ -124,9 +135,9 @@ export default function HomePage() {
           </div>
           <div className="p-4 rounded-2xl bg-obsidian-900/60 border border-white/[0.06] space-y-1.5">
             <QrCode className="w-4 h-4 text-amber-400" />
-            <h3 className="font-bold text-white">Resiliência 4G & Offline</h3>
+            <h3 className="font-bold text-white">Engenharia de Cardápio</h3>
             <p className="text-zinc-400 leading-relaxed">
-              Sacola de favoritos e fila de eventos persistidas em LocalStorage + IndexedDB fallback.
+              Classifica automaticamente Estrelas, Enigmas (&ldquo;quase pediu&rdquo;) e Invisíveis em `/dashboard`.
             </p>
           </div>
         </div>
