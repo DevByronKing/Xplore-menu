@@ -7,14 +7,14 @@
 }
 
 html {
-  background-color: #070709;
+  background-color: #0F0F0F;
   color: #ffffff;
   -webkit-tap-highlight-color: transparent;
   scroll-behavior: smooth;
 }
 
 body {
-  background-color: #070709;
+  background-color: #0F0F0F;
   color: #ffffff;
   overflow-x: hidden;
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
@@ -32,7 +32,7 @@ body {
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(-4px);
+    transform: translateY(4px);
   }
   to {
     opacity: 1;

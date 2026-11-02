@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Outfit } from 'next/font/google';
+import { Inter, Playfair_Display } from 'next/font/google';
 import './globals.css';
 
 const inter = Inter({
@@ -8,9 +8,11 @@ const inter = Inter({
   display: 'swap',
 });
 
-const outfit = Outfit({
+const playfair = Playfair_Display({
   subsets: ['latin'],
-  variable: '--font-outfit',
+  variable: '--font-playfair',
+  weight: ['400', '500', '600', '700'],
+  style: ['normal', 'italic'],
   display: 'swap',
 });
 
@@ -18,13 +20,13 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
-  themeColor: '#070709',
+  themeColor: '#0F0F0F',
 };
 
 export const metadata: Metadata = {
-  title: 'Xplore Menu • Cardápio Digital Social & Telemetria Comportamental',
+  title: 'NÓMADE Fornaria & Café • Cardápio Digital',
   description:
-    'Cardápio interativo mobile-first acionado via NFC e QR Code com vídeos verticais e engenharia de cardápio em tempo real.',
+    'Explore nosso cardápio interativo de fermentação natural, brunch e cafés especiais.',
 };
 
 export default function RootLayout({
@@ -33,8 +35,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className={`${inter.variable} ${outfit.variable} dark`}>
-      <body className="font-sans antialiased bg-obsidian-950 text-white min-h-screen">
+    <html lang="pt-BR" className={`${inter.variable} ${playfair.variable} dark`}>
+      <body className="font-sans antialiased bg-[#0F0F0F] text-white min-h-screen">
         {children}
       </body>
     </html>

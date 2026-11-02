@@ -11,10 +11,10 @@ const config: Config = {
     extend: {
       colors: {
         obsidian: {
-          950: '#070709',
-          900: '#0D0E12',
-          800: '#15171E',
-          700: '#20232D',
+          950: '#0F0F0F',
+          900: '#161616',
+          800: '#1F1F1F',
+          700: '#2A2A2A',
         },
         amber: {
           glow: '#F59E0B',
@@ -27,18 +27,15 @@ const config: Config = {
       },
       fontFamily: {
         sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
-        display: ['var(--font-outfit)', 'system-ui', 'sans-serif'],
+        serif: ['var(--font-playfair)', 'Georgia', 'serif'],
+        display: ['var(--font-playfair)', 'Georgia', 'serif'],
       },
       keyframes: {
         'heart-pop': {
           '0%': { transform: 'scale(1)' },
-          '40%': { transform: 'scale(1.35)' },
-          '70%': { transform: 'scale(0.9)' },
+          '40%': { transform: 'scale(1.3)' },
+          '70%': { transform: 'scale(0.92)' },
           '100%': { transform: 'scale(1)' },
-        },
-        'pulse-subtle': {
-          '0%, 100%': { opacity: '1' },
-          '50%': { opacity: '0.65' },
         },
         'slide-up': {
           '0%': { transform: 'translateY(100%)' },
@@ -46,9 +43,8 @@ const config: Config = {
         },
       },
       animation: {
-        'heart-pop': 'heart-pop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-        'pulse-subtle': 'pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        'slide-up': 'slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+        'heart-pop': 'heart-pop 0.32s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+        'slide-up': 'slide-up 0.28s cubic-bezier(0.16, 1, 0.3, 1)',
       },
     },
   },
