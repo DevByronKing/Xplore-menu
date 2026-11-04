@@ -31,6 +31,7 @@ export interface Restaurant {
   opening_hours?: string;
   instagram_handle?: string;
   wifi_ssid?: string;
+  whatsapp_phone?: string;
   logo_url: string;
   cover_url?: string;
   theme_config: RestaurantThemeConfig;
@@ -48,13 +49,13 @@ export interface Category {
 }
 
 export type ProductBadge =
-  | 'Best Seller'
-  | 'Novo'
+  | 'Mais Pedido'
+  | 'Novidade'
   | 'Sugestão do Chef'
   | 'Fornada Quente'
   | 'Edição Limitada'
   | 'Vegano'
-  | 'Fermentação Natural 48h';
+  | 'Fermentação 48h';
 
 export interface MenuItem {
   id: string;
@@ -110,7 +111,10 @@ export interface TelemetryEventMetadata {
   quantity?: number;
   price_cents?: number;
   view_count_in_session?: number;
-  hesitation_reason?: 'removed_from_selection' | 'repeated_views_no_action' | 'session_exit_with_selection';
+  hesitation_reason?:
+    | 'removed_from_selection'
+    | 'repeated_views_no_action'
+    | 'session_exit_with_selection';
   device_type?: 'mobile' | 'tablet' | 'desktop';
   connection_effective_type?: string;
   viewport_ratio?: number;
@@ -148,7 +152,11 @@ export interface SessionOriginContext {
   connectionType: string;
 }
 
-export type MenuEngineeringQuadrant = 'star' | 'enigma' | 'invisible' | 'workhorse';
+export type MenuEngineeringQuadrant =
+  | 'star'
+  | 'enigma'
+  | 'invisible'
+  | 'workhorse';
 
 export interface ItemBehavioralAnalytics {
   menuItemId: string;
@@ -162,7 +170,38 @@ export interface ItemBehavioralAnalytics {
   allergenExpandsCount: number;
   additionsCount: number;
   removalsCount: number;
-  hesitationScore: number; // 0 to 100
+  hesitationScore: number;
   quadrant: MenuEngineeringQuadrant;
   diagnosticNote: string;
+}
+
+export type OrderPaymentPreference =
+  | 'tab_end'
+  | 'cash'
+  | 'card_machine'
+  | 'pix_now';
+
+export type TableOrderStatus = 'novo' | 'preparando' | 'entregue';
+
+export interface TableOrderItem {
+  itemId: string;
+  name: string;
+  quantity: number;
+  priceCents: number;
+  notes?: string;
+}
+
+export interface TableOrder {
+  id: string;
+  orderNumber: number;
+  restaurantId: string;
+  tableLabel: string;
+  locationCode: string;
+  source: TouchpointSourceType;
+  items: TableOrderItem[];
+  totalCents: number;
+  paymentPreference: OrderPaymentPreference;
+  cashChangeFor?: string;
+  status: TableOrderStatus;
+  createdAt: string;
 }

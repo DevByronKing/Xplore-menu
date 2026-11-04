@@ -334,3 +334,45 @@ CREATE POLICY "Owners can read telemetry events of their restaurants"
               AND r.owner_id = auth.uid()
         )
     );
+
+-- ============================================================================
+-- 9. TABLE ORDERS (LIVE KITCHEN & WAITER ORDERS - /pedidos)
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS public.table_orders (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    restaurant_id UUID NOT NULL REFERENCES public.restaurants(id) ON DELETE CASCADE,
+    order_code TEXT NOT NULL,
+    table_label TEXT NOT NULL DEFAULT 'Mesa 04',
+    items JSONB NOT NULL DEFAULT '[]'::jsonb,
+    total_cents INTEGER NOT NULL CHECK (total_cents >= 0),
+    customer_note TEXT,
+    payment_preference TEXT NOT NULL DEFAULT 'comanda_aberta',
+    status TEXT NOT NULL DEFAULT 'novo' CHECK (status IN ('novo', 'preparando', 'entregue', 'cancelado')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_table_orders_restaurant_status
+    ON public.table_orders(restaurant_id, status, created_at DESC);
+
+ALTER TABLE public.table_orders ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Public clients can create table orders"
+    ON public.table_orders
+    FOR INSERT
+    TO anon, authenticated
+    WITH CHECK (true);
+
+CREATE POLICY "Owners and kitchen monitors can view and update table orders"
+    ON public.table_orders
+    FOR ALL
+    TO anon, authenticated
+    USING (true)
+    WITH CHECK (true);
+
+-- ============================================================================
+-- 10. SUPABASE STORAGE BUCKET FOR DIRECT MOBILE GALLERY UPLOADS (menu-media)
+-- ============================================================================
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('menu-media', 'menu-media', true)
+ON CONFLICT (id) DO NOTHING;
+

@@ -7,6 +7,7 @@ import {
   Copy,
   CreditCard,
   Heart,
+  MessageCircle,
   Minus,
   Plus,
   QrCode,
@@ -16,10 +17,13 @@ import {
   Utensils,
   X,
 } from 'lucide-react';
+import type { OrderPaymentPreference, TableOrder } from '@/types/database';
 import { useMenuSession } from '@/context/MenuSessionContext';
-import { cn, formatCurrencyBRL } from '@/lib/utils';
-
-type PaymentPreference = 'tab_end' | 'cash' | 'card_machine' | 'pix_now';
+import {
+  buildWhatsAppOrderUrl,
+  submitNewTableOrder,
+} from '@/lib/storage/ordersStorage';
+import { cn, formatCurrencyBRL, generateUUID } from '@/lib/utils';
 
 export function SelectionDrawer() {
   const {
@@ -37,18 +41,21 @@ export function SelectionDrawer() {
   } = useMenuSession();
 
   const [paymentPreference, setPaymentPreference] =
-    useState<PaymentPreference>('tab_end');
+    useState<OrderPaymentPreference>('tab_end');
   const [cashChangeFor, setCashChangeFor] = useState('');
   const [waiterPresentationMode, setWaiterPresentationMode] = useState(false);
   const [orderStatus, setOrderStatus] = useState<'editing' | 'pix' | 'sent'>(
     'editing'
   );
+  const [lastCreatedOrder, setLastCreatedOrder] = useState<TableOrder | null>(
+    null
+  );
   const [pixCopied, setPixCopied] = useState(false);
 
   const tableLabel =
     sessionOrigin.locationCode !== 'acesso_direto'
-      ? sessionOrigin.locationLabel.split('•')[0]?.trim() || 'Mesa'
-      : 'Sua Mesa';
+      ? sessionOrigin.locationLabel.split('•')[0]?.trim() || 'Mesa 04'
+      : 'Mesa 04';
 
   const mockPixPayload = `00020126580014BR.GOV.BCB.PIX0136${restaurant.id}5204000053039865406${(
     totalSelectionPriceCents / 100
@@ -61,6 +68,33 @@ export function SelectionDrawer() {
       location: sessionOrigin.locationCode,
       payment_preference: paymentPreference,
     });
+
+    const newOrder: TableOrder = {
+      id: `ord-${generateUUID().slice(0, 8)}`,
+      orderNumber: Math.floor(102 + (Date.now() % 890)),
+      restaurantId: restaurant.id,
+      tableLabel,
+      locationCode: sessionOrigin.locationCode,
+      source: sessionOrigin.source,
+      items: selectedItems.map(({ item, quantity, notes }) => ({
+        itemId: item.id,
+        name: item.name,
+        quantity,
+        priceCents: item.price_cents,
+        notes: notes?.trim() || undefined,
+      })),
+      totalCents: totalSelectionPriceCents,
+      paymentPreference,
+      cashChangeFor:
+        paymentPreference === 'cash' && cashChangeFor.trim()
+          ? cashChangeFor.trim()
+          : undefined,
+      status: 'novo',
+      createdAt: new Date().toISOString(),
+    };
+
+    setLastCreatedOrder(newOrder);
+    void submitNewTableOrder(newOrder);
 
     if (paymentPreference === 'pix_now') {
       setOrderStatus('pix');
@@ -216,26 +250,31 @@ export function SelectionDrawer() {
                   </button>
                 </div>
               ) : orderStatus === 'sent' ? (
-                /* MODE B: ORDER CONFIRMED FOR TABLE (PAY LATER / CASH / CARD) */
+                /* MODE B: ORDER CONFIRMED FOR TABLE (RINGING IN KITCHEN / COUNTER) */
                 <div className="p-6 rounded-2xl bg-[#0F0F0F] border border-white/15 text-center space-y-4">
                   <div className="h-12 w-12 rounded-full bg-white text-[#0F0F0F] flex items-center justify-center mx-auto">
                     <Check className="w-6 h-6 stroke-[2.5]" />
                   </div>
 
                   <div className="space-y-1">
+                    <span className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 text-[11px] font-semibold">
+                      Pedido #{lastCreatedOrder?.orderNumber || 104} •{' '}
+                      {tableLabel}
+                    </span>
                     <h3 className="font-serif text-2xl text-white">
-                      Pedido Enviado para a Cozinha!
+                      Pedido Recebido na Cozinha!
                     </h3>
                     <p className="text-xs text-[#A1A1AA] max-w-xs mx-auto leading-relaxed">
-                      Vinculado à <strong className="text-white">{tableLabel}</strong>.{' '}
                       {paymentPreference === 'tab_end' &&
-                        'O valor foi lançado na comanda da sua mesa para pagamento no final.'}
+                        'Lançado na comanda da sua mesa para pagamento no final.'}
                       {paymentPreference === 'cash' &&
                         `Pagamento em dinheiro registrado${
                           cashChangeFor ? ` (troco para R$ ${cashChangeFor})` : ''
                         }.`}
                       {paymentPreference === 'card_machine' &&
-                        'O garçom levará a maquininha até sua mesa no fechamento.'}
+                        'O garçom levará a maquininha até sua mesa.'}
+                      {paymentPreference === 'pix_now' &&
+                        'Pagamento via Pix informado à equipe.'}
                     </p>
                   </div>
 
@@ -254,6 +293,18 @@ export function SelectionDrawer() {
                       </div>
                     ))}
                   </div>
+
+                  {lastCreatedOrder && (
+                    <a
+                      href={buildWhatsAppOrderUrl(lastCreatedOrder)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-3 rounded-full bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-semibold flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      <span>Enviar Cópia no WhatsApp do Caixa</span>
+                    </a>
+                  )}
 
                   <button
                     type="button"
@@ -280,7 +331,7 @@ export function SelectionDrawer() {
                       <QrCode className="w-20 h-20 text-[#0F0F0F]" />
                     </div>
                     <p className="text-xs text-[#A1A1AA]">
-                      Copie o código Pix abaixo ou prefira pagar no final na comanda da mesa.
+                      Seu pedido #{lastCreatedOrder?.orderNumber} já apitou na cozinha! Copie o Pix abaixo:
                     </p>
                   </div>
 
@@ -307,25 +358,13 @@ export function SelectionDrawer() {
                       onClick={() => setOrderStatus('sent')}
                       className="py-3 px-4 rounded-full bg-white/[0.12] text-xs font-medium text-white"
                     >
-                      Já Paguei
+                      Concluir
                     </button>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPaymentPreference('tab_end');
-                      setOrderStatus('editing');
-                    }}
-                    className="w-full text-center text-xs text-[#A1A1AA] hover:text-white pt-1"
-                  >
-                    Prefiro pagar no final / dinheiro / cartão na mesa
-                  </button>
                 </div>
               ) : (
                 /* MODE D: EDITING ITEMS + FLEXIBLE PAYMENT / ORDER OPTIONS */
                 <>
-                  {/* Saved Items List */}
                   <div className="space-y-3">
                     {selectedItems.map(({ item, quantity, notes }) => {
                       const thumb =
@@ -351,7 +390,6 @@ export function SelectionDrawer() {
                               </p>
                             </div>
 
-                            {/* Quantity Stepper */}
                             <div className="flex items-center gap-1.5">
                               <div className="inline-flex items-center gap-2 bg-white/[0.08] rounded-full px-2 py-1">
                                 <button
@@ -404,7 +442,7 @@ export function SelectionDrawer() {
                     })}
                   </div>
 
-                  {/* Payment Timing & Method Selector (Solves the bottleneck!) */}
+                  {/* Payment Timing & Method Selector */}
                   <div className="space-y-2.5 pt-1">
                     <label className="block text-[11px] font-semibold uppercase tracking-widest text-[#A1A1AA]">
                       Como prefere pagar?
@@ -508,7 +546,6 @@ export function SelectionDrawer() {
                       </button>
                     </div>
 
-                    {/* Optional Cash Change Field */}
                     {paymentPreference === 'cash' && (
                       <div className="pt-1 animate-fadeIn">
                         <input
@@ -540,7 +577,6 @@ export function SelectionDrawer() {
                     </span>
                   </div>
 
-                  {/* Primary Action: Send Order to Table */}
                   <button
                     type="button"
                     onClick={handleConfirmOrder}
@@ -554,7 +590,6 @@ export function SelectionDrawer() {
                     </span>
                   </button>
 
-                  {/* Secondary Action: Just Show List to Waiter */}
                   <button
                     type="button"
                     onClick={() => setWaiterPresentationMode(true)}

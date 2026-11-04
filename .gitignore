@@ -29,3 +29,7 @@ yarn-error.log*
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Temporary local gallery uploads
+/public/uploads/
+
