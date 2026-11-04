@@ -12,6 +12,7 @@ import { MenuSessionProvider } from '@/context/MenuSessionContext';
 import { SocialMenuHeader } from '@/components/menu/SocialMenuHeader';
 import { SocialProductCard } from '@/components/menu/SocialProductCard';
 import { SelectionDrawer } from '@/components/menu/SelectionDrawer';
+import { MenuEntrySplash } from '@/components/menu/MenuEntrySplash';
 import {
   CATALOG_UPDATED_EVENT,
   loadStoredCategories,
@@ -85,6 +86,9 @@ export function SocialMenuClient({
       initialSourceParam={initialSourceParam ?? 'nfc'}
       initialLocationParam={initialLocationParam ?? 'mesa_04'}
     >
+      {/* Impressive Editorial Entry Splash Screen */}
+      <MenuEntrySplash restaurant={restaurant} />
+
       <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col selection:bg-white selection:text-[#0F0F0F]">
         {/* Sticky Header & Clean Horizontal Category Pills */}
         <SocialMenuHeader
@@ -96,8 +100,11 @@ export function SocialMenuClient({
           }}
         />
 
-        {/* Main Mobile-First Vertical Snap Feed Container */}
-        <main className="flex-1 w-full max-w-md mx-auto px-4 pt-2 pb-28 snap-y snap-mandatory">
+        {/* Main Mobile-First Fluid Feed Container */}
+        <main
+          key={activeCategorySlug}
+          className="flex-1 w-full max-w-md mx-auto px-4 pt-2 pb-28 animate-fadeIn"
+        >
           {filteredItems.length === 0 ? (
             <div className="py-24 text-center space-y-3">
               <Compass className="w-8 h-8 text-zinc-600 mx-auto" />

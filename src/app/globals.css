@@ -10,13 +10,14 @@ html {
   background-color: #0F0F0F;
   color: #ffffff;
   -webkit-tap-highlight-color: transparent;
-  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
 }
 
 body {
   background-color: #0F0F0F;
   color: #ffffff;
   overflow-x: hidden;
+  overscroll-behavior-y: none;
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
 }
 
@@ -32,7 +33,7 @@ body {
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(4px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
@@ -41,5 +42,5 @@ body {
 }
 
 .animate-fadeIn {
-  animation: fadeIn 0.2s ease-out forwards;
+  animation: fadeIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }

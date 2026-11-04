@@ -180,7 +180,12 @@ export function SocialProductCard({
     <article
       ref={cardRef as React.RefObject<HTMLElement>}
       data-menu-item-id={item.id}
-      className="relative w-full h-[76dvh] min-h-[470px] max-h-[650px] snap-center snap-always rounded-3xl overflow-hidden bg-[#161616] select-none shadow-2xl mb-4"
+      className={cn(
+        'relative w-full h-[76dvh] min-h-[470px] max-h-[650px] scroll-mt-28 rounded-3xl overflow-hidden bg-[#161616] select-none mb-5 will-change-transform transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]',
+        isVisibleInViewport
+          ? 'scale-100 opacity-100 shadow-2xl ring-1 ring-white/15'
+          : 'scale-[0.975] opacity-80 shadow-lg ring-1 ring-white/[0.06]'
+      )}
       onClick={handleMediaClick}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
@@ -197,15 +202,16 @@ export function SocialProductCard({
           preload={priorityLoad ? 'auto' : 'metadata'}
           onError={() => setVideoError(true)}
           onEnded={() => trackEvent('video_replay', item.id)}
-          className="absolute inset-0 h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out"
         />
       ) : (
         // eslint-disable-next-line @next/next/no-img-element
         <img
+          key={activeMedia?.id}
           src={activeMedia?.poster || activeMedia?.url}
           alt={activeMedia?.alt || item.name}
           loading={priorityLoad ? 'eager' : 'lazy'}
-          className="absolute inset-0 h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-cover animate-fadeIn"
         />
       )}
 
