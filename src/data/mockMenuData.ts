@@ -20,10 +20,10 @@ export const DEMO_RESTAURANT: Restaurant = {
   cover_url:
     'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80',
   theme_config: {
-    primaryColor: '#F97316',
+    primaryColor: '#FFFFFF',
     accentColor: '#F59E0B',
-    backgroundColor: '#070709',
-    surfaceColor: '#15171E',
+    backgroundColor: '#0F0F0F',
+    surfaceColor: '#161616',
     fontFamily: 'Inter',
     currency: 'BRL',
     locale: 'pt-BR',
@@ -125,7 +125,7 @@ export const DEMO_TOUCHPOINTS: NfcTouchpoint[] = [
   {
     id: 'tp-balcao',
     restaurant_id: DEMO_RESTAURANT.id,
-    label: 'Balcão Espresso Bar',
+    label: 'Balcão Cafeteria',
     code: 'balcao_01',
     source_type: 'nfc',
     scans_count: 176,
@@ -134,41 +134,47 @@ export const DEMO_TOUCHPOINTS: NfcTouchpoint[] = [
   },
 ];
 
+/**
+ * Every dish has:
+ * - Slide 1: Local vertical MP4 preparation video (/videos/prep-*.mp4) with a unique poster image
+ * - Slide 2: A completely distinct preparation/ingredient photo (never repeating the poster)
+ * - Slide 3: A third distinct detail/plated photo
+ */
 export const DEMO_MENU_ITEMS: MenuItem[] = [
   {
     id: 'item-focaccia-burrata-pistache',
     restaurant_id: DEMO_RESTAURANT.id,
     category_id: 'cat-focaccias',
-    name: 'Focaccia Burrata, Mortadela & Pistache',
+    name: 'Focaccia Burrata & Pistache',
     description:
-      'Massa de fermentação lenta 48h no azeite extravirgem, recheada com mortadela italiana defumada, burrata cremosa inteira, pesto rústico de pistache tostado e raspas de limão siciliano.',
+      'Massa de fermentação lenta 48h no azeite extravirgem, mortadela italiana defumada, burrata cremosa inteira, pesto rústico de pistache tostado e raspas de limão siciliano.',
     price_cents: 5490,
     media_urls: [
       {
         id: 'm-1a',
         type: 'video',
-        url: 'https://assets.mixkit.co/videos/preview/mixkit-cutting-a-fresh-pizza-on-a-wooden-board-42433-large.mp4',
+        url: '/videos/prep-focaccia-burrata.mp4',
         poster:
           'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=900&q=80',
-        alt: 'Focaccia artesanal sendo cortada crocante',
+        alt: 'Vídeo do preparo da Focaccia Burrata & Pistache',
         aspectRatio: '9:16',
       },
       {
         id: 'm-1b',
         type: 'image',
-        url: 'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=900&q=80',
-        alt: 'Close-up da burrata cremosa e pistache na focaccia',
+        url: 'https://images.unsplash.com/photo-1539252554453-80ab65ce3586?auto=format&fit=crop&w=900&q=80',
+        alt: 'Corte transversal mostrando o recheio generoso e alvéolos da massa',
         aspectRatio: '9:16',
       },
       {
         id: 'm-1c',
         type: 'image',
-        url: 'https://images.unsplash.com/photo-1539252554453-80ab65ce3586?auto=format&fit=crop&w=900&q=80',
-        alt: 'Interior alveolado da massa de fermentação natural 48h',
+        url: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=900&q=80',
+        alt: 'Fornada artesanal saindo quente do forno de pedra',
         aspectRatio: '9:16',
       },
     ],
-    badges: ['Best Seller', 'Sugestão do Chef', 'Fermentação Natural 48h'],
+    badges: ['Mais Pedido', 'Sugestão do Chef'],
     allergens: ['Glúten (Trigo)', 'Lactose (Leite de Búfala)', 'Oleaginosas (Pistache)'],
     ingredients: [
       'Farinha italiana Tipo 00',
@@ -181,7 +187,7 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     ],
     calories: 640,
     prep_time_minutes: 8,
-    pairing_suggestion: 'Harmoniza com Espresso Tonic Siciliano ou Cold Brew',
+    pairing_suggestion: 'Harmoniza com Espresso Tonic Siciliano',
     is_available: true,
     is_featured: true,
     sort_order: 1,
@@ -191,27 +197,36 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     id: 'item-focaccia-stracciatella-figo',
     restaurant_id: DEMO_RESTAURANT.id,
     category_id: 'cat-focaccias',
-    name: 'Focaccia Stracciatella, Prosciutto & Figo',
+    name: 'Focaccia Stracciatella & Figo',
     description:
-      'Crocante por fora e nuvem por dentro. Coberta com stracciatella artesanal fria, fatias de prosciutto crudo maturado 18 meses, figos frescos grelhados no mel de laranjeira e flor de sal.',
+      'Crocante por fora e macia por dentro. Coberta com stracciatella artesanal fria, prosciutto crudo maturado 18 meses, figos frescos grelhados no mel de laranjeira e flor de sal.',
     price_cents: 5890,
     media_urls: [
       {
         id: 'm-2a',
-        type: 'image',
-        url: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=900&q=80',
-        alt: 'Focaccia com prosciutto crudo, figos e mel',
+        type: 'video',
+        url: '/videos/prep-focaccia-figo.mp4',
+        poster:
+          'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=900&q=80',
+        alt: 'Vídeo de montagem da Focaccia com figos e prosciutto',
         aspectRatio: '9:16',
       },
       {
         id: 'm-2b',
         type: 'image',
         url: 'https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?auto=format&fit=crop&w=900&q=80',
-        alt: 'Detalhe da stracciatella com redução balsâmica',
+        alt: 'Finalização com stracciatella fresca e redução balsâmica',
+        aspectRatio: '9:16',
+      },
+      {
+        id: 'm-2c',
+        type: 'image',
+        url: 'https://images.unsplash.com/photo-1586444248902-2f64eddc13df?auto=format&fit=crop&w=900&q=80',
+        alt: 'Massa de fermentação lenta regada no azeite extravirgem',
         aspectRatio: '9:16',
       },
     ],
-    badges: ['Novo', 'Fornada Quente'],
+    badges: ['Novidade', 'Fornada Quente'],
     allergens: ['Glúten (Trigo)', 'Lactose'],
     ingredients: [
       'Massa de focaccia genovesa',
@@ -223,7 +238,7 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     ],
     calories: 590,
     prep_time_minutes: 9,
-    pairing_suggestion: 'Harmoniza com Cascara Spritz Artesanal',
+    pairing_suggestion: 'Harmoniza com Filtrado V60 Geisha',
     is_available: true,
     is_featured: true,
     sort_order: 2,
@@ -233,36 +248,36 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     id: 'item-shakshuka-tartine-trufada',
     restaurant_id: DEMO_RESTAURANT.id,
     category_id: 'cat-especiais',
-    name: 'Eggs Royale & Tartine de Cogumelos Trufados',
+    name: 'Eggs Royale & Tartine Trufada',
     description:
-      'Fatia alta de sourdough tostado na manteiga noisette, mix de cogumelos Eryngii e Paris salteados no tomilho, dois ovos caipiras pochê perfeitos, hollandaise aerado de trufa negra e cebolinha.',
+      'Fatia alta de pão sourdough tostado na manteiga noisette, mix de cogumelos Eryngii e Paris salteados no tomilho, dois ovos caipiras pochê e molho hollandaise aerado de trufa negra.',
     price_cents: 4890,
     media_urls: [
       {
         id: 'm-3a',
         type: 'video',
-        url: 'https://assets.mixkit.co/videos/preview/mixkit-Waiter-serving-a-dish-with-a-poached-egg-42926-large.mp4',
+        url: '/videos/prep-eggs-royale.mp4',
         poster:
           'https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=900&q=80',
-        alt: 'Gema cremosa escorrendo sobre tartine de cogumelos',
+        alt: 'Vídeo do preparo dos ovos pochê e cogumelos trufados',
         aspectRatio: '9:16',
       },
       {
         id: 'm-3b',
         type: 'image',
-        url: 'https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=900&q=80',
-        alt: 'Tartine de ovos pochê com hollandaise trufado',
+        url: 'https://images.unsplash.com/photo-1482049016688-2d3e1b311543?auto=format&fit=crop&w=900&q=80',
+        alt: 'Detalhe da gema cremosa sobre os cogumelos dourados',
         aspectRatio: '9:16',
       },
       {
         id: 'm-3c',
         type: 'image',
-        url: 'https://images.unsplash.com/photo-1482049016688-2d3e1b311543?auto=format&fit=crop&w=900&q=80',
-        alt: 'Detalhe dos cogumelos dourados e sourdough',
+        url: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=900&q=80',
+        alt: 'Salteado de cogumelos frescos na manteiga e ervas',
         aspectRatio: '9:16',
       },
     ],
-    badges: ['Best Seller', 'Sugestão do Chef'],
+    badges: ['Mais Pedido', 'Sugestão do Chef'],
     allergens: ['Ovos', 'Glúten (Trigo)', 'Lactose (Manteiga)'],
     ingredients: [
       'Pão sourdough de campanha',
@@ -273,7 +288,7 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     ],
     calories: 520,
     prep_time_minutes: 12,
-    pairing_suggestion: 'Harmoniza com Flat White Duplo (Catuaí Vermelho)',
+    pairing_suggestion: 'Harmoniza com Pistachio Crème Latte',
     is_available: true,
     is_featured: true,
     sort_order: 3,
@@ -283,27 +298,36 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     id: 'item-french-toast-brioche',
     restaurant_id: DEMO_RESTAURANT.id,
     category_id: 'cat-especiais',
-    name: 'Brioche French Toast Caramelizada & Mascarpone',
+    name: 'Brioche French Toast & Mascarpone',
     description:
-      'Fatia generosa de brioche de fermentação natural selada em crosta de açúcar demerara e baunilha em fava, quenelle de mascarpone batido com cumaru, frutas vermelhas frescas e calda de maple.',
+      'Fatia generosa de brioche artesanal selada em crosta de açúcar demerara e fava de baunilha, creme de mascarpone batido com cumaru, frutas vermelhas frescas e calda de maple.',
     price_cents: 4290,
     media_urls: [
       {
         id: 'm-4a',
-        type: 'image',
-        url: 'https://images.unsplash.com/photo-1484723091739-30a097e8f929?auto=format&fit=crop&w=900&q=80',
-        alt: 'Brioche French Toast com mirtilos, morangos e calda',
+        type: 'video',
+        url: '/videos/prep-french-toast.mp4',
+        poster:
+          'https://images.unsplash.com/photo-1484723091739-30a097e8f929?auto=format&fit=crop&w=900&q=80',
+        alt: 'Vídeo caramelizando o brioche e finalizando com calda',
         aspectRatio: '9:16',
       },
       {
         id: 'm-4b',
         type: 'image',
         url: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?auto=format&fit=crop&w=900&q=80',
-        alt: 'Textura caramelizada do brioche com mascarpone',
+        alt: 'Crosta dourada de açúcar demerara com frutas vermelhas',
+        aspectRatio: '9:16',
+      },
+      {
+        id: 'm-4c',
+        type: 'image',
+        url: 'https://images.unsplash.com/photo-1528207776546-365bb710ee93?auto=format&fit=crop&w=900&q=80',
+        alt: 'Finalização com quenelle de mascarpone e mirtilos frescos',
         aspectRatio: '9:16',
       },
     ],
-    badges: ['Best Seller'],
+    badges: ['Mais Pedido'],
     allergens: ['Glúten (Trigo)', 'Ovos', 'Lactose'],
     ingredients: [
       'Brioche amanteigado artesanal',
@@ -324,35 +348,42 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     id: 'item-pistachio-cream-latte',
     restaurant_id: DEMO_RESTAURANT.id,
     category_id: 'cat-cafes',
-    name: 'Pistachio Crème Latte (Quente ou Iced)',
+    name: 'Pistachio Crème Latte',
     description:
-      'Dose dupla do nosso espresso autoral (Mantiqueira de Minas 87 pts), ganache artesanal de pistache na borda da xícara, leite vaporizado sedoso (ou aveia barista) e farofa crocante de pistache.',
+      'Dose dupla do nosso espresso autoral (Mantiqueira de Minas 87 pts), ganache artesanal de pistache na borda da xícara, leite vaporizado sedoso (ou aveia barista) e praliné de pistache.',
     price_cents: 2690,
     media_urls: [
       {
         id: 'm-5a',
         type: 'video',
-        url: 'https://assets.mixkit.co/videos/preview/mixkit-pouring-milk-into-a-cup-of-coffee-41763-large.mp4',
+        url: '/videos/prep-pistachio-latte.mp4',
         poster:
           'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=900&q=80',
-        alt: 'Latte art sendo despejado sobre ganache de pistache',
+        alt: 'Vídeo extraindo o espresso e vaporizando o Pistachio Latte',
         aspectRatio: '9:16',
       },
       {
         id: 'm-5b',
         type: 'image',
-        url: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=900&q=80',
-        alt: 'Pistachio Latte com borda cremosa e pistaches triturados',
+        url: 'https://images.unsplash.com/photo-1534778101976-62847782c213?auto=format&fit=crop&w=900&q=80',
+        alt: 'Arte no leite vaporizado sobre ganache de pistache',
+        aspectRatio: '9:16',
+      },
+      {
+        id: 'm-5c',
+        type: 'image',
+        url: 'https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?auto=format&fit=crop&w=900&q=80',
+        alt: 'Extração cremosa do café especial 100% Arábica',
         aspectRatio: '9:16',
       },
     ],
-    badges: ['Best Seller', 'Edição Limitada'],
+    badges: ['Mais Pedido', 'Edição Limitada'],
     allergens: ['Lactose (Opção Vegana com Leite de Aveia)', 'Oleaginosas (Pistache)'],
     ingredients: [
       'Espresso duplo 100% Arábica (Notas de caramelo e avelã)',
       'Pasta pura de pistache artesanal (sem corantes)',
       'Leite Tipo A integral ou Aveia Barista',
-      'Pralliné de pistache tostado com flor de sal',
+      'Praliné de pistache tostado com flor de sal',
     ],
     calories: 245,
     prep_time_minutes: 4,
@@ -366,23 +397,32 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     id: 'item-v60-microlote-geisha',
     restaurant_id: DEMO_RESTAURANT.id,
     category_id: 'cat-cafes',
-    name: 'Filtrado Hario V60 • Microlote Geisha 89 pts',
+    name: 'Filtrado Hario V60 • Geisha',
     description:
-      'Extraído na mesa em jarra de vidro borossilicato. Café de altitude (1.420m, Caparaó), processo fermentado anaeróbico com notas intensas de jasmim, pêssego branco, bergamota e acidez cítrica brilhante.',
+      'Extraído na mesa em jarra de cristal. Café de altitude (1.420m, Caparaó), fermentação anaeróbica com notas florais de jasmim, pêssego branco, bergamota e acidez delicada.',
     price_cents: 2400,
     media_urls: [
       {
         id: 'm-6a',
-        type: 'image',
-        url: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=900&q=80',
-        alt: 'Extração de café especial em método Hario V60',
+        type: 'video',
+        url: '/videos/prep-v60-geisha.mp4',
+        poster:
+          'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=900&q=80',
+        alt: 'Vídeo da infusão manual no método Hario V60',
         aspectRatio: '9:16',
       },
       {
         id: 'm-6b',
         type: 'image',
         url: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=900&q=80',
-        alt: 'Café filtrado servido em cristal',
+        alt: 'Café especial servido em jarra térmica de vidro',
+        aspectRatio: '9:16',
+      },
+      {
+        id: 'm-6c',
+        type: 'image',
+        url: 'https://images.unsplash.com/photo-1447933601403-0c6688de566e?auto=format&fit=crop&w=900&q=80',
+        alt: 'Grãos de microlote Geisha recém-torrados na casa',
         aspectRatio: '9:16',
       },
     ],
@@ -406,33 +446,40 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     category_id: 'cat-bebidas-geladas',
     name: 'Yuzu & Siciliano Espresso Tonic',
     description:
-      'Refrescante, cítrico e fotogênico. Camada de água tônica botânica artesanal com infusão de yuzu japonês e limão siciliano, gelo cristal translúcido, ramo de alecrim maçaricado e duplo espresso flutuante.',
+      'Refrescante e cítrico. Camada de água tônica botânica artesanal com infusão de yuzu japonês e limão siciliano, gelo cristal, ramo de alecrim defumado e duplo espresso flutuante.',
     price_cents: 2590,
     media_urls: [
       {
         id: 'm-7a',
         type: 'video',
-        url: 'https://assets.mixkit.co/videos/preview/mixkit-pouring-iced-coffee-into-a-glass-with-milk-41856-large.mp4',
+        url: '/videos/prep-espresso-tonic.mp4',
         poster:
           'https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?auto=format&fit=crop&w=900&q=80',
-        alt: 'Espresso sendo despejado sobre tônica e gelo cristal',
+        alt: 'Vídeo formando as duas camadas do Espresso Tonic com gelo',
         aspectRatio: '9:16',
       },
       {
         id: 'm-7b',
         type: 'image',
-        url: 'https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?auto=format&fit=crop&w=900&q=80',
-        alt: 'Copo alto de Espresso Tonic em duas camadas com limão siciliano',
+        url: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=900&q=80',
+        alt: 'Contraste do café escuro descendo sobre a tônica cítrica',
+        aspectRatio: '9:16',
+      },
+      {
+        id: 'm-7c',
+        type: 'image',
+        url: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=900&q=80',
+        alt: 'Preparo com limão siciliano fresco e gelo translúcido',
         aspectRatio: '9:16',
       },
     ],
-    badges: ['Best Seller', 'Vegano'],
+    badges: ['Mais Pedido', 'Vegano'],
     allergens: ['Sem Alergênicos (Contém Cafeína)'],
     ingredients: [
       'Duplo Espresso Torra Clara',
       'Água tônica de quinino natural',
-      'Cordial artesanal de Yuzu e Limão Siciliano',
-      'Alecrim fresco defumado na hora',
+      'Redução artesanal de Yuzu e Limão Siciliano',
+      'Alecrim fresco maçaricado na hora',
     ],
     calories: 95,
     prep_time_minutes: 3,
@@ -446,28 +493,37 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     id: 'item-matcha-strawberry-cloud',
     restaurant_id: DEMO_RESTAURANT.id,
     category_id: 'cat-bebidas-geladas',
-    name: 'Uji Matcha & Strawberry Cold Foam',
+    name: 'Iced Strawberry Matcha',
     description:
-      'Matcha cerimonial japonês de Uji batido em chasen de bambu sobre leite de amêndoas gelado e compota fresca de morangos orgânicos no fundo do copo, finalizado com cold foam aveludado.',
+      'Matcha cerimonial japonês de Uji batido na hora com chasen de bambu sobre leite de amêndoas gelado e compota fresca de morangos orgânicos no fundo do copo.',
     price_cents: 2890,
     media_urls: [
       {
         id: 'm-8a',
-        type: 'image',
-        url: 'https://images.unsplash.com/photo-1536256263959-770b48d82b0a?auto=format&fit=crop&w=900&q=80',
-        alt: 'Iced Matcha Latte em camadas verde vibrante e morango',
+        type: 'video',
+        url: '/videos/prep-matcha-cloud.mp4',
+        poster:
+          'https://images.unsplash.com/photo-1536256263959-770b48d82b0a?auto=format&fit=crop&w=900&q=80',
+        alt: 'Vídeo batendo o Matcha Uji e montando sobre compota de morango',
         aspectRatio: '9:16',
       },
       {
         id: 'm-8b',
         type: 'image',
         url: 'https://images.unsplash.com/photo-1515823064-d6e0c04616a7?auto=format&fit=crop&w=900&q=80',
-        alt: 'Preparo de Matcha Cerimonial Uji',
+        alt: 'Emulsão tradicional do chá verde cerimonial com chasen de bambu',
+        aspectRatio: '9:16',
+      },
+      {
+        id: 'm-8c',
+        type: 'image',
+        url: 'https://images.unsplash.com/photo-1556881286-fc6915169721?auto=format&fit=crop&w=900&q=80',
+        alt: 'Camadas de morango orgânico, leite vegetal e espuma fria',
         aspectRatio: '9:16',
       },
     ],
-    badges: ['Novo', 'Edição Limitada'],
-    allergens: ['Oleaginosas (Leite de Amêndoas)', 'Lactose (Opcional no Cold Foam)'],
+    badges: ['Novidade', 'Edição Limitada'],
+    allergens: ['Oleaginosas (Leite de Amêndoas)', 'Lactose (Opcional na Espuma)'],
     ingredients: [
       'Matcha Cerimonial Uji Colheita de Primavera (3g)',
       'Redução rústica de morangos frescos',
@@ -484,9 +540,6 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
   },
 ];
 
-/**
- * Helper to fetch restaurant data by slug (supports any demo tenantSlug gracefully)
- */
 export function getMenuDataByTenantSlug(tenantSlug: string): {
   restaurant: Restaurant;
   categories: Category[];
@@ -495,7 +548,6 @@ export function getMenuDataByTenantSlug(tenantSlug: string): {
 } {
   const normalizedSlug = decodeURIComponent(tenantSlug).toLowerCase();
 
-  // Customize display name slightly if user visits a custom slug, while keeping rich demo data
   const customRestaurant: Restaurant =
     normalizedSlug === DEMO_RESTAURANT.slug ||
     normalizedSlug === 'demo' ||
@@ -508,7 +560,7 @@ export function getMenuDataByTenantSlug(tenantSlug: string): {
             normalizedSlug
               .split('-')
               .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-              .join(' ') + ' • Social Menu',
+              .join(' '),
         };
 
   return {

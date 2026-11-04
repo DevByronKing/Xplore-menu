@@ -26,17 +26,12 @@ interface NfcGeneratorViewProps {
   onSaveTouchpoints: (updated: NfcTouchpoint[]) => void;
 }
 
-/**
- * Generates a deterministic 15x15 QR-like visual matrix from any string URL
- * so the table plaque preview renders crisp vector SVG without external API calls.
- */
 function buildDeterministicMatrix(seedText: string): boolean[][] {
   const size = 15;
   const grid: boolean[][] = Array.from({ length: size }, () =>
     Array.from({ length: size }, () => false)
   );
 
-  // Finder patterns (top-left, top-right, bottom-left 5x5 blocks)
   const drawFinder = (r0: number, c0: number) => {
     for (let r = 0; r < 5; r++) {
       for (let c = 0; c < 5; c++) {
@@ -68,7 +63,7 @@ function buildDeterministicMatrix(seedText: string): boolean[][] {
 
       hash ^= (r * 31 + c * 17) & 0xff;
       hash = Math.imul(hash, 16777619);
-      grid[r]![c] = (Math.abs(hash) % 10) < 5;
+      grid[r]![c] = Math.abs(hash) % 10 < 5;
     }
   }
 
@@ -155,27 +150,26 @@ export function NfcGeneratorView({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      {/* LEFT COLUMN: CREATE FORM & TOUCHPOINTS TABLE */}
+      {/* COLUNA ESQUERDA: CRIAR MESA E LISTA DE MESAS */}
       <div className="lg:col-span-7 space-y-6">
-        {/* Generator Form */}
         <form
           onSubmit={handleCreateTouchpoint}
-          className="p-6 rounded-3xl bg-obsidian-900 border border-white/10 space-y-4"
+          className="p-6 rounded-3xl bg-[#161616] border border-white/10 space-y-4"
         >
           <div>
-            <h2 className="text-lg font-black text-white flex items-center gap-2">
+            <h2 className="text-lg font-bold text-white flex items-center gap-2">
               <Radio className="w-5 h-5 text-emerald-400" />
-              <span>Novo Ponto de Contato NFC / QR Code</span>
+              <span>Cadastrar Nova Mesa, Balcão ou Vitrine</span>
             </h2>
-            <p className="text-xs text-zinc-400">
-              Gere URLs parametrizadas exclusivas para gravar em cartões/adesivos NFC (NTAG213/215) ou displays de mesa.
+            <p className="text-xs text-[#A1A1AA]">
+              Crie um link exclusivo para saber de qual mesa veio cada pedido ou leitura.
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
             <div className="space-y-1">
-              <label className="font-bold text-zinc-300">
-                Identificação da Localização *
+              <label className="font-semibold text-zinc-300">
+                Nome da Mesa ou Local *
               </label>
               <input
                 type="text"
@@ -183,13 +177,13 @@ export function NfcGeneratorView({
                 value={labelInput}
                 onChange={(e) => handleLabelChange(e.target.value)}
                 placeholder="Ex: Mesa 12 • Varanda, Vitrine..."
-                className="w-full px-3.5 py-2.5 rounded-xl bg-obsidian-950 border border-white/10 text-white focus:outline-none focus:border-brand"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#0F0F0F] border border-white/10 text-white focus:outline-none focus:border-white/40"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="font-bold text-zinc-300">
-                Código na URL (`?location=...`) *
+              <label className="font-semibold text-zinc-300">
+                Identificador no Link *
               </label>
               <input
                 type="text"
@@ -197,7 +191,7 @@ export function NfcGeneratorView({
                 value={codeInput}
                 onChange={(e) => setCodeInput(e.target.value)}
                 placeholder="mesa_12"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-obsidian-950 border border-white/10 text-emerald-400 font-mono focus:outline-none focus:border-brand"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#0F0F0F] border border-white/10 text-emerald-400 font-mono focus:outline-none focus:border-white/40"
               />
             </div>
           </div>
@@ -208,24 +202,24 @@ export function NfcGeneratorView({
                 type="button"
                 onClick={() => setSourceType('nfc')}
                 className={cn(
-                  'px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 border transition-all',
+                  'px-3.5 py-2 rounded-full text-xs font-semibold flex items-center gap-1.5 border transition-all',
                   sourceType === 'nfc'
-                    ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300'
-                    : 'bg-obsidian-950 border-white/10 text-zinc-400'
+                    ? 'bg-white text-[#0F0F0F] border-white'
+                    : 'bg-[#0F0F0F] border-white/10 text-zinc-400'
                 )}
               >
                 <Radio className="w-3.5 h-3.5" />
-                <span>Tag NFC (Aproximação)</span>
+                <span>Aproximação (NFC)</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setSourceType('qrcode')}
                 className={cn(
-                  'px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 border transition-all',
+                  'px-3.5 py-2 rounded-full text-xs font-semibold flex items-center gap-1.5 border transition-all',
                   sourceType === 'qrcode'
-                    ? 'bg-amber-500/20 border-amber-400 text-amber-300'
-                    : 'bg-obsidian-950 border-white/10 text-zinc-400'
+                    ? 'bg-white text-[#0F0F0F] border-white'
+                    : 'bg-[#0F0F0F] border-white/10 text-zinc-400'
                 )}
               >
                 <QrCode className="w-3.5 h-3.5" />
@@ -235,22 +229,22 @@ export function NfcGeneratorView({
 
             <button
               type="submit"
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand to-amber-500 text-obsidian-950 font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-brand/25 hover:brightness-110"
+              className="px-5 py-2.5 rounded-full bg-white text-[#0F0F0F] font-semibold text-xs flex items-center justify-center gap-1.5 hover:bg-zinc-200 transition-colors"
             >
-              <Plus className="w-4 h-4 stroke-[2.5]" />
-              <span>Gerar Link & Plaquinha</span>
+              <Plus className="w-4 h-4" />
+              <span>Criar Plaquinha da Mesa</span>
             </button>
           </div>
         </form>
 
-        {/* Active Touchpoints List */}
-        <div className="p-6 rounded-3xl bg-obsidian-900 border border-white/10 space-y-4">
+        {/* Lista de Mesas Cadastradas */}
+        <div className="p-6 rounded-3xl bg-[#161616] border border-white/10 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-base font-extrabold text-white">
-              Pontos Mapeados no Restaurante ({touchpoints.length})
+            <h3 className="text-base font-bold text-white">
+              Suas Mesas e Pontos de Contato ({touchpoints.length})
             </h3>
-            <span className="text-xs text-zinc-400">
-              Total de leituras:{' '}
+            <span className="text-xs text-[#A1A1AA]">
+              Total de acessos:{' '}
               <strong className="text-white">
                 {touchpoints.reduce((acc, t) => acc + t.scans_count, 0)}
               </strong>
@@ -270,23 +264,16 @@ export function NfcGeneratorView({
                   className={cn(
                     'cursor-pointer p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3',
                     isSelected
-                      ? 'bg-obsidian-950 border-brand/50 ring-1 ring-brand/30'
-                      : 'bg-obsidian-950/60 border-white/[0.07] hover:border-white/20'
+                      ? 'bg-[#0F0F0F] border-white/40'
+                      : 'bg-[#0F0F0F]/60 border-white/[0.07] hover:border-white/20'
                   )}
                 >
-                  <div className="flex items-start gap-3 min-w-0">
-                    <div
-                      className={cn(
-                        'h-10 w-10 rounded-xl flex items-center justify-center shrink-0',
-                        tp.source_type === 'qrcode'
-                          ? 'bg-amber-500/15 text-amber-400'
-                          : 'bg-emerald-500/15 text-emerald-400'
-                      )}
-                    >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="h-10 w-10 rounded-xl bg-white/[0.08] text-white flex items-center justify-center shrink-0">
                       {tp.source_type === 'qrcode' ? (
                         <QrCode className="w-5 h-5" />
                       ) : (
-                        <Radio className="w-5 h-5" />
+                        <Radio className="w-5 h-5 text-emerald-400" />
                       )}
                     </div>
 
@@ -295,12 +282,14 @@ export function NfcGeneratorView({
                         <h4 className="text-sm font-bold text-white truncate">
                           {tp.label}
                         </h4>
-                        <span className="px-2 py-0.5 rounded-full bg-white/5 text-[10px] font-mono text-zinc-300">
-                          {tp.scans_count} leituras
+                        <span className="px-2 py-0.5 rounded-full bg-white/[0.06] text-[10px] text-zinc-300">
+                          {tp.scans_count} clientes
                         </span>
                       </div>
-                      <p className="text-[11px] font-mono text-zinc-400 truncate mt-0.5">
-                        {relativeUrl}
+                      <p className="text-[11px] text-[#A1A1AA] truncate mt-0.5">
+                        {tp.source_type === 'qrcode'
+                          ? 'Abertura por câmera (QR Code)'
+                          : 'Abertura por aproximação (NFC)'}
                       </p>
                     </div>
                   </div>
@@ -313,29 +302,29 @@ export function NfcGeneratorView({
                       type="button"
                       onClick={() => handleCopyUrl(tp)}
                       className={cn(
-                        'px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all',
+                        'px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all',
                         isCopied
-                          ? 'bg-emerald-500 text-obsidian-950'
-                          : 'bg-obsidian-800 hover:bg-obsidian-700 text-zinc-200 border border-white/10'
+                          ? 'bg-emerald-500 text-[#0F0F0F]'
+                          : 'bg-white/[0.1] hover:bg-white/[0.18] text-white'
                       )}
                     >
                       {isCopied ? (
                         <>
                           <Check className="w-3.5 h-3.5" />
-                          <span>Copiado</span>
+                          <span>Link Copiado!</span>
                         </>
                       ) : (
                         <>
                           <Copy className="w-3.5 h-3.5" />
-                          <span>Copiar NDEF</span>
+                          <span>Copiar Link</span>
                         </>
                       )}
                     </button>
 
                     <Link
                       href={relativeUrl}
-                      className="p-2 rounded-xl bg-obsidian-800 hover:bg-brand/20 text-zinc-300 hover:text-brand-light border border-white/10 transition-colors"
-                      title="Testar leitura deste ponto no Cardápio Social"
+                      className="p-2 rounded-full bg-white/[0.08] hover:bg-white/[0.16] text-white transition-colors"
+                      title="Abrir cardápio como se estivesse nesta mesa"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
                     </Link>
@@ -344,8 +333,8 @@ export function NfcGeneratorView({
                       <button
                         type="button"
                         onClick={() => handleDeleteTouchpoint(tp.id)}
-                        className="p-2 rounded-xl bg-obsidian-800 hover:bg-rose-500/20 text-zinc-400 hover:text-rose-400 transition-colors"
-                        aria-label="Remover ponto"
+                        className="p-2 rounded-full bg-white/[0.06] hover:bg-rose-500/20 text-zinc-400 hover:text-rose-400 transition-colors"
+                        aria-label="Remover mesa"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -358,36 +347,34 @@ export function NfcGeneratorView({
         </div>
       </div>
 
-      {/* RIGHT COLUMN: PHYSICAL NFC/QR TABLE PLAQUE PREVIEW & NDEF SPECIFICATION */}
+      {/* COLUNA DIREITA: PREVIEW DA PLAQUINHA DA MESA */}
       <div className="lg:col-span-5 space-y-6">
         {selectedTp && (
-          <div className="p-6 rounded-3xl bg-obsidian-900 border border-white/10 space-y-5 sticky top-24">
+          <div className="p-6 rounded-3xl bg-[#161616] border border-white/10 space-y-5 sticky top-24">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-brand">
-                Preview do Display de Mesa
+              <span className="text-xs font-semibold text-[#A1A1AA]">
+                Modelo da Plaquinha de Mesa
               </span>
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[10px] font-bold">
-                Pronto para Gravação NFC
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 text-[10px] font-semibold">
+                Pronta para Uso
               </span>
             </div>
 
-            {/* Physical Acrylic Plaque Mockup */}
-            <div className="p-6 rounded-3xl bg-gradient-to-b from-obsidian-800 via-obsidian-950 to-black border-2 border-white/15 shadow-2xl text-center space-y-4">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand/20 border border-brand/40 text-brand-light text-[11px] font-bold">
-                <Wifi className="w-3.5 h-3.5 rotate-90" />
-                <span>APROXIME O CELULAR (NFC)</span>
+            <div className="p-6 rounded-3xl bg-[#0F0F0F] border border-white/15 shadow-2xl text-center space-y-4">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.08] text-white text-[10px] font-semibold uppercase tracking-wider">
+                <Wifi className="w-3.5 h-3.5 rotate-90 text-emerald-400" />
+                <span>Aproxime o Celular ou Aponte a Câmera</span>
               </div>
 
               <div>
-                <h3 className="text-lg font-black text-white">
+                <h3 className="font-serif text-2xl text-white">
                   {restaurant.name}
                 </h3>
-                <p className="text-xs font-bold text-amber-400 mt-0.5">
+                <p className="text-xs font-medium text-[#A1A1AA] mt-0.5">
                   {selectedTp.label}
                 </p>
               </div>
 
-              {/* Vector SVG QR Code */}
               <div className="mx-auto w-44 h-44 rounded-2xl bg-white p-3 shadow-inner flex items-center justify-center">
                 <svg
                   viewBox="0 0 15 15"
@@ -403,7 +390,7 @@ export function NfcGeneratorView({
                           y={rIdx}
                           width={1}
                           height={1}
-                          fill="#070709"
+                          fill="#0F0F0F"
                         />
                       ) : null
                     )
@@ -411,39 +398,33 @@ export function NfcGeneratorView({
                 </svg>
               </div>
 
-              <p className="text-[11px] text-zinc-400 max-w-[230px] mx-auto">
-                Encoste o topo do smartphone ou aponte a câmera para explorar o cardápio em vídeo.
+              <p className="text-[11px] text-[#A1A1AA] max-w-[230px] mx-auto">
+                Toque com o celular na plaquinha para ver os pratos sendo preparados em vídeo.
               </p>
             </div>
 
-            {/* NDEF Payload Details */}
-            <div className="p-4 rounded-2xl bg-obsidian-950 border border-white/10 space-y-2 text-xs">
-              <div className="flex items-center justify-between text-zinc-400">
-                <span className="font-semibold text-white flex items-center gap-1.5">
-                  <Smartphone className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Payload NDEF (NTAG213 / NTAG215)</span>
-                </span>
-                <span className="text-[10px] font-mono text-emerald-400">
-                  URI Record (0x55)
-                </span>
+            <div className="p-4 rounded-2xl bg-[#0F0F0F] border border-white/10 space-y-3 text-xs">
+              <div className="flex items-center gap-2 text-white font-semibold">
+                <Smartphone className="w-4 h-4 text-emerald-400" />
+                <span>Link para gravar no adesivo/cartão desta mesa:</span>
               </div>
-              <div className="p-2.5 rounded-xl bg-black font-mono text-[11px] text-amber-300 break-all border border-white/5">
+              <div className="p-2.5 rounded-xl bg-[#161616] font-mono text-[11px] text-zinc-300 break-all border border-white/5">
                 {buildTouchpointUrl(selectedTp)}
               </div>
-              <div className="pt-1 flex items-center gap-2">
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => handleCopyUrl(selectedTp)}
-                  className="flex-1 py-2.5 rounded-xl bg-brand text-obsidian-950 font-extrabold text-xs flex items-center justify-center gap-1.5"
+                  className="flex-1 py-2.5 rounded-full bg-white text-[#0F0F0F] font-semibold text-xs flex items-center justify-center gap-1.5"
                 >
                   <Copy className="w-3.5 h-3.5" />
-                  <span>Copiar URL Parametrizada</span>
+                  <span>Copiar Link da Mesa</span>
                 </button>
                 <Link
                   href={`/${restaurant.slug}?source=${selectedTp.source_type}&location=${selectedTp.code}`}
-                  className="py-2.5 px-4 rounded-xl bg-obsidian-800 hover:bg-obsidian-700 text-white font-bold text-xs flex items-center gap-1.5"
+                  className="py-2.5 px-4 rounded-full bg-white/[0.1] hover:bg-white/[0.18] text-white font-medium text-xs flex items-center gap-1.5"
                 >
-                  <span>Simular Scan</span>
+                  <span>Testar Mesa</span>
                   <ExternalLink className="w-3.5 h-3.5" />
                 </Link>
               </div>

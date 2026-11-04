@@ -29,11 +29,11 @@ interface MenuManagementViewProps {
 }
 
 const AVAILABLE_BADGES = [
-  'Best Seller',
-  'Novo',
+  'Mais Pedido',
+  'Novidade',
   'Sugestão do Chef',
   'Fornada Quente',
-  'Fermentação Natural 48h',
+  'Fermentação 48h',
   'Edição Limitada',
   'Vegano',
 ];
@@ -53,11 +53,9 @@ export function MenuManagementView({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
 
-  // Category creation state
   const [newCategoryName, setNewCategoryName] = useState('');
   const [showCategoryForm, setShowCategoryForm] = useState(false);
 
-  // Dish Form State
   const [formName, setFormName] = useState('');
   const [formCategoryId, setFormCategoryId] = useState('');
   const [formPriceBRL, setFormPriceBRL] = useState('48,90');
@@ -65,15 +63,13 @@ export function MenuManagementView({
   const [formPairing, setFormPairing] = useState('');
   const [formPrepMinutes, setFormPrepMinutes] = useState('10');
   const [formCalories, setFormCalories] = useState('520');
-  const [formBadges, setFormBadges] = useState<string[]>(['Novo']);
+  const [formBadges, setFormBadges] = useState<string[]>(['Mais Pedido']);
   const [formAllergens, setFormAllergens] = useState('Glúten (Trigo), Lactose');
   const [formIngredients, setFormIngredients] = useState(
     'Farinha italiana Tipo 00, Levain 48h, Azeite extravirgem'
   );
-  const [formMediaType, setFormMediaType] = useState<'video' | 'image'>('image');
-  const [formMediaUrl, setFormMediaUrl] = useState(
-    'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=900&q=80'
-  );
+  const [formMediaType, setFormMediaType] = useState<'video' | 'image'>('video');
+  const [formMediaUrl, setFormMediaUrl] = useState('/videos/prep-focaccia-burrata.mp4');
   const [formPosterUrl, setFormPosterUrl] = useState(
     'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=900&q=80'
   );
@@ -93,7 +89,7 @@ export function MenuManagementView({
     setFormAllergens(item.allergens.join(', '));
     setFormIngredients(item.ingredients.join(', '));
     const primaryMedia = item.media_urls[0];
-    setFormMediaType(primaryMedia?.type || 'image');
+    setFormMediaType(primaryMedia?.type || 'video');
     setFormMediaUrl(primaryMedia?.url || '');
     setFormPosterUrl(primaryMedia?.poster || primaryMedia?.url || '');
     setFormIsAvailable(item.is_available);
@@ -114,22 +110,21 @@ export function MenuManagementView({
     setFormPairing('Harmoniza com Espresso Tonic Siciliano');
     setFormPrepMinutes('8');
     setFormCalories('490');
-    setFormBadges(['Novo', 'Sugestão do Chef']);
+    setFormBadges(['Novidade', 'Sugestão do Chef']);
     setFormAllergens('Glúten (Trigo), Lactose');
-    setFormIngredients('Massa de fermentação natural 48h, Queijo artesanal, Flor de sal');
-    setFormMediaType('image');
-    setFormMediaUrl(
-      'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=900&q=80'
+    setFormIngredients(
+      'Massa de fermentação natural 48h, Queijo artesanal, Flor de sal'
     );
+    setFormMediaType('video');
+    setFormMediaUrl('/videos/prep-focaccia-burrata.mp4');
     setFormPosterUrl(
-      'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=900&q=80'
+      'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=900&q=80'
     );
     setFormIsAvailable(true);
     setFormIsFeatured(true);
     setIsModalOpen(true);
   };
 
-  // Handle jump-to-edit triggered from Behavioral Intelligence view
   useEffect(() => {
     if (initialEditItemId) {
       const target = items.find((i) => i.id === initialEditItemId);
@@ -270,14 +265,14 @@ export function MenuManagementView({
 
   return (
     <div className="space-y-6">
-      {/* Top Action Bar */}
-      <div className="p-5 rounded-3xl bg-obsidian-900 border border-white/10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      {/* Barra Superior */}
+      <div className="p-5 rounded-3xl bg-[#161616] border border-white/10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h2 className="text-lg font-black text-white">
-            Gestão de Cardápio & Disponibilidade em Tempo Real
+          <h2 className="text-lg font-bold text-white">
+            Seus Pratos, Vídeos & Disponibilidade
           </h2>
-          <p className="text-xs text-zinc-400">
-            Qualquer alteração de preço, vídeo ou toggle de &ldquo;Esgotado&rdquo; reflete instantaneamente no cardápio social `/nomade-bistro`.
+          <p className="text-xs text-[#A1A1AA]">
+            Altere preços, edite ingredientes ou marque um prato como &ldquo;Esgotado&rdquo; com 1 toque.
           </p>
         </div>
 
@@ -285,7 +280,7 @@ export function MenuManagementView({
           <button
             type="button"
             onClick={() => setShowCategoryForm((prev) => !prev)}
-            className="px-3.5 py-2.5 rounded-xl bg-obsidian-800 hover:bg-obsidian-700 border border-white/10 text-xs font-bold text-zinc-200 flex items-center gap-1.5"
+            className="px-3.5 py-2.5 rounded-full bg-white/[0.08] hover:bg-white/[0.14] text-xs font-semibold text-white flex items-center gap-1.5"
           >
             <FolderPlus className="w-4 h-4 text-amber-400" />
             <span>+ Nova Categoria</span>
@@ -294,48 +289,48 @@ export function MenuManagementView({
           <button
             type="button"
             onClick={onResetDefaults}
-            className="px-3.5 py-2.5 rounded-xl bg-obsidian-800 hover:bg-obsidian-700 border border-white/10 text-xs font-semibold text-zinc-400 hover:text-white flex items-center gap-1.5"
-            title="Restaurar cardápio padrão de demonstração"
+            className="px-3.5 py-2.5 rounded-full bg-white/[0.08] hover:bg-white/[0.14] text-xs font-medium text-zinc-300 flex items-center gap-1.5"
+            title="Restaurar cardápio padrão com vídeos de preparo"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span>Restaurar Demo</span>
+            <span>Restaurar Padrão</span>
           </button>
 
           <button
             type="button"
             onClick={openCreateModal}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand to-amber-500 text-obsidian-950 font-extrabold text-xs flex items-center gap-1.5 shadow-lg shadow-brand/25 hover:brightness-110"
+            className="px-4 py-2.5 rounded-full bg-white text-[#0F0F0F] font-semibold text-xs flex items-center gap-1.5 hover:bg-zinc-200"
           >
-            <Plus className="w-4 h-4 stroke-[2.5]" />
-            <span>Novo Prato / Vídeo</span>
+            <Plus className="w-4 h-4" />
+            <span>Adicionar Prato</span>
           </button>
         </div>
       </div>
 
-      {/* Quick Category Creator */}
+      {/* Formulário Rápido de Categoria */}
       {showCategoryForm && (
         <form
           onSubmit={handleAddCategory}
-          className="p-4 rounded-2xl bg-obsidian-900 border border-amber-500/40 flex flex-col sm:flex-row items-center gap-3"
+          className="p-4 rounded-2xl bg-[#161616] border border-white/20 flex flex-col sm:flex-row items-center gap-3"
         >
           <input
             type="text"
             value={newCategoryName}
             onChange={(e) => setNewCategoryName(e.target.value)}
-            placeholder="Nome da categoria (ex: Vinhos Naturais, Sobremesas)..."
-            className="flex-1 w-full px-3.5 py-2 rounded-xl bg-obsidian-950 border border-white/10 text-xs text-white focus:outline-none focus:border-brand"
+            placeholder="Nome da categoria (ex: Vinhos, Sobremesas)..."
+            className="flex-1 w-full px-3.5 py-2 rounded-xl bg-[#0F0F0F] border border-white/10 text-xs text-white focus:outline-none focus:border-white/40"
           />
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <button
               type="submit"
-              className="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-amber-500 text-obsidian-950 text-xs font-bold"
+              className="flex-1 sm:flex-initial px-4 py-2 rounded-full bg-white text-[#0F0F0F] text-xs font-semibold"
             >
               Salvar Categoria
             </button>
             <button
               type="button"
               onClick={() => setShowCategoryForm(false)}
-              className="p-2 rounded-xl bg-obsidian-800 text-zinc-400"
+              className="p-2 rounded-full bg-white/10 text-zinc-400"
             >
               <X className="w-4 h-4" />
             </button>
@@ -343,7 +338,7 @@ export function MenuManagementView({
         </form>
       )}
 
-      {/* Search & Category Filter Bar */}
+      {/* Busca e Filtro */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div className="relative flex-1 max-w-md">
           <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -351,8 +346,8 @@ export function MenuManagementView({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Buscar prato por nome, ingrediente ou badge..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-obsidian-900 border border-white/10 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-brand"
+            placeholder="Buscar prato pelo nome ou ingrediente..."
+            className="w-full pl-10 pr-4 py-2.5 rounded-full bg-[#161616] border border-white/10 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-white/30"
           />
         </div>
 
@@ -361,10 +356,10 @@ export function MenuManagementView({
             type="button"
             onClick={() => setCategoryFilter('all')}
             className={cn(
-              'px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all',
+              'px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all',
               categoryFilter === 'all'
-                ? 'bg-white text-obsidian-950'
-                : 'bg-obsidian-900 text-zinc-400 hover:text-white border border-white/5'
+                ? 'bg-white text-[#0F0F0F]'
+                : 'bg-[#161616] text-zinc-400 hover:text-white border border-white/5'
             )}
           >
             Todas ({items.length})
@@ -377,10 +372,10 @@ export function MenuManagementView({
                 type="button"
                 onClick={() => setCategoryFilter(cat.id)}
                 className={cn(
-                  'px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all',
+                  'px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all',
                   categoryFilter === cat.id
-                    ? 'bg-brand text-obsidian-950'
-                    : 'bg-obsidian-900 text-zinc-400 hover:text-white border border-white/5'
+                    ? 'bg-white text-[#0F0F0F]'
+                    : 'bg-[#161616] text-zinc-400 hover:text-white border border-white/5'
                 )}
               >
                 {cat.name}
@@ -389,7 +384,7 @@ export function MenuManagementView({
         </div>
       </div>
 
-      {/* Dishes Grid */}
+      {/* Lista de Pratos */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filteredItems.map((item) => {
           const primaryMedia = item.media_urls[0];
@@ -400,24 +395,23 @@ export function MenuManagementView({
             <div
               key={item.id}
               className={cn(
-                'p-4 rounded-2xl bg-obsidian-900 border transition-all flex gap-4',
+                'p-4 rounded-2xl bg-[#161616] border transition-all flex gap-4',
                 item.is_available
                   ? 'border-white/[0.08]'
-                  : 'border-rose-500/30 opacity-75 bg-obsidian-950'
+                  : 'border-rose-500/30 opacity-75 bg-[#0F0F0F]'
               )}
             >
-              {/* Thumbnail */}
-              <div className="relative h-28 w-24 rounded-2xl overflow-hidden bg-obsidian-950 shrink-0">
+              <div className="relative h-28 w-24 rounded-2xl overflow-hidden bg-[#0F0F0F] shrink-0">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={thumb}
                   alt={item.name}
                   className="h-full w-full object-cover"
                 />
-                <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/75 text-[9px] font-bold text-white flex items-center gap-1">
+                <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/75 text-[9px] font-semibold text-white flex items-center gap-1">
                   {hasVideo ? (
                     <>
-                      <Video className="w-2.5 h-2.5 text-amber-400" />
+                      <Video className="w-2.5 h-2.5 text-emerald-400" />
                       <span>Vídeo</span>
                     </>
                   ) : (
@@ -429,7 +423,6 @@ export function MenuManagementView({
                 </span>
               </div>
 
-              {/* Details & Controls */}
               <div className="flex-1 min-w-0 flex flex-col justify-between">
                 <div>
                   <div className="flex items-start justify-between gap-2">
@@ -437,40 +430,27 @@ export function MenuManagementView({
                       <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
                         {categoryNameMap.get(item.category_id) || 'Cardápio'}
                       </span>
-                      <h3 className="text-sm font-extrabold text-white truncate">
+                      <h3 className="text-sm font-bold text-white truncate">
                         {item.name}
                       </h3>
                     </div>
-                    <span className="text-sm font-black text-amber-400 shrink-0">
+                    <span className="text-sm font-bold text-white shrink-0">
                       {formatCurrencyBRL(item.price_cents)}
                     </span>
                   </div>
 
-                  <p className="text-xs text-zinc-400 line-clamp-2 mt-1">
+                  <p className="text-xs text-[#A1A1AA] line-clamp-2 mt-1">
                     {item.description}
                   </p>
-
-                  {/* Badges */}
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {item.badges.map((badge) => (
-                      <span
-                        key={badge}
-                        className="px-2 py-0.5 rounded-md bg-obsidian-800 text-zinc-300 text-[10px] font-medium"
-                      >
-                        {badge}
-                      </span>
-                    ))}
-                  </div>
                 </div>
 
-                {/* Bottom Action Row: Real-Time Availability Toggle + Edit/Delete */}
                 <div className="pt-3 mt-2 border-t border-white/[0.06] flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => handleToggleAvailability(item.id)}
                       className={cn(
-                        'px-2.5 py-1 rounded-xl text-[11px] font-bold flex items-center gap-1.5 border transition-all',
+                        'px-2.5 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 border transition-all',
                         item.is_available
                           ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
                           : 'bg-rose-500/20 border-rose-500/40 text-rose-300'
@@ -482,19 +462,18 @@ export function MenuManagementView({
                           item.is_available ? 'bg-emerald-400' : 'bg-rose-400'
                         )}
                       />
-                      {item.is_available ? 'Em Estoque' : 'Esgotado Hoje'}
+                      {item.is_available ? 'Disponível' : 'Esgotado Hoje'}
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handleToggleFeatured(item.id)}
                       className={cn(
-                        'px-2 py-1 rounded-xl text-[11px] font-semibold flex items-center gap-1 border transition-all',
+                        'px-2.5 py-1 rounded-full text-[11px] font-medium flex items-center gap-1 border transition-all',
                         item.is_featured
-                          ? 'bg-amber-500/15 border-amber-500/30 text-amber-300'
-                          : 'bg-obsidian-800 border-white/5 text-zinc-500 hover:text-zinc-300'
+                          ? 'bg-white/15 border-white/30 text-white'
+                          : 'bg-white/[0.04] border-white/5 text-zinc-500 hover:text-zinc-300'
                       )}
-                      title="Destacar na aba Destaques"
                     >
                       <Sparkles className="w-3 h-3" />
                       <span>Destaque</span>
@@ -505,7 +484,7 @@ export function MenuManagementView({
                     <button
                       type="button"
                       onClick={() => openEditorForItem(item)}
-                      className="px-2.5 py-1 rounded-xl bg-obsidian-800 hover:bg-obsidian-700 text-zinc-200 text-[11px] font-semibold flex items-center gap-1"
+                      className="px-3 py-1 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-white text-[11px] font-medium flex items-center gap-1"
                     >
                       <Edit3 className="w-3 h-3" />
                       <span>Editar</span>
@@ -513,7 +492,7 @@ export function MenuManagementView({
                     <button
                       type="button"
                       onClick={() => handleDeleteItem(item.id)}
-                      className="p-1.5 rounded-xl bg-obsidian-800 hover:bg-rose-500/20 text-zinc-400 hover:text-rose-400 transition-colors"
+                      className="p-1.5 rounded-full bg-white/[0.06] hover:bg-rose-500/20 text-zinc-400 hover:text-rose-400 transition-colors"
                       aria-label="Excluir prato"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -526,18 +505,20 @@ export function MenuManagementView({
         })}
       </div>
 
-      {/* CREATE / EDIT DISH MODAL */}
+      {/* MODAL DE EDIÇÃO / CRIAÇÃO */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="w-full max-w-xl rounded-3xl bg-obsidian-900 border border-white/15 shadow-2xl overflow-hidden my-8">
+          <div className="w-full max-w-xl rounded-3xl bg-[#161616] border border-white/15 shadow-2xl overflow-hidden my-8">
             <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
-              <h3 className="text-base font-extrabold text-white">
-                {editingItem ? `Editar: ${editingItem.name}` : 'Cadastrar Novo Prato no Cardápio Social'}
+              <h3 className="font-serif text-xl text-white">
+                {editingItem
+                  ? `Editar: ${editingItem.name}`
+                  : 'Adicionar Novo Prato'}
               </h3>
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="p-1.5 rounded-full bg-obsidian-800 text-zinc-400 hover:text-white"
+                className="p-1.5 rounded-full bg-white/10 text-zinc-400 hover:text-white"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -549,37 +530,43 @@ export function MenuManagementView({
             >
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="sm:col-span-2 space-y-1">
-                  <label className="font-bold text-zinc-300">Nome do Prato *</label>
+                  <label className="font-semibold text-zinc-300">
+                    Nome do Prato *
+                  </label>
                   <input
                     type="text"
                     required
                     value={formName}
                     onChange={(e) => setFormName(e.target.value)}
                     placeholder="Ex: Focaccia Burrata & Pistache"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-obsidian-950 border border-white/10 text-white focus:outline-none focus:border-brand"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#0F0F0F] border border-white/10 text-white focus:outline-none focus:border-white/40"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-bold text-zinc-300">Preço (R$) *</label>
+                  <label className="font-semibold text-zinc-300">
+                    Preço (R$) *
+                  </label>
                   <input
                     type="text"
                     required
                     value={formPriceBRL}
                     onChange={(e) => setFormPriceBRL(e.target.value)}
                     placeholder="54,90"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-obsidian-950 border border-white/10 text-amber-400 font-bold focus:outline-none focus:border-brand"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#0F0F0F] border border-white/10 text-white font-semibold focus:outline-none focus:border-white/40"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-1">
-                  <label className="font-bold text-zinc-300">Categoria</label>
+                  <label className="font-semibold text-zinc-300">
+                    Categoria
+                  </label>
                   <select
                     value={formCategoryId}
                     onChange={(e) => setFormCategoryId(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl bg-obsidian-950 border border-white/10 text-white focus:outline-none focus:border-brand"
+                    className="w-full px-3 py-2.5 rounded-xl bg-[#0F0F0F] border border-white/10 text-white focus:outline-none focus:border-white/40"
                   >
                     {categories
                       .filter((c) => c.slug !== 'destaques')
@@ -592,108 +579,114 @@ export function MenuManagementView({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-bold text-zinc-300">Preparo (min)</label>
+                  <label className="font-semibold text-zinc-300">
+                    Tempo de Preparo (min)
+                  </label>
                   <input
                     type="number"
                     value={formPrepMinutes}
                     onChange={(e) => setFormPrepMinutes(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-obsidian-950 border border-white/10 text-white"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#0F0F0F] border border-white/10 text-white"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-bold text-zinc-300">Calorias (kcal)</label>
+                  <label className="font-semibold text-zinc-300">
+                    Calorias (kcal)
+                  </label>
                   <input
                     type="number"
                     value={formCalories}
                     onChange={(e) => setFormCalories(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-obsidian-950 border border-white/10 text-white"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#0F0F0F] border border-white/10 text-white"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="font-bold text-zinc-300">
-                  Descrição Apetitosa (Foco em Conversão) *
+                <label className="font-semibold text-zinc-300">
+                  Descrição do Prato *
                 </label>
                 <textarea
                   rows={3}
                   required
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
-                  placeholder="Descreva texturas, origem dos ingredientes e preparo..."
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-obsidian-950 border border-white/10 text-white focus:outline-none focus:border-brand"
+                  placeholder="Descreva os ingredientes, o preparo e se serve 1 ou 2 pessoas..."
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#0F0F0F] border border-white/10 text-white focus:outline-none focus:border-white/40"
                 />
               </div>
 
-              {/* Media Section */}
-              <div className="p-3.5 rounded-2xl bg-obsidian-950 border border-white/10 space-y-3">
+              {/* Vídeo / Foto */}
+              <div className="p-3.5 rounded-2xl bg-[#0F0F0F] border border-white/10 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-white">
-                    Mídia Principal do Card (9:16 Vertical)
+                  <span className="font-semibold text-white">
+                    Vídeo de Preparo ou Foto Principal
                   </span>
                   <div className="flex items-center gap-1.5">
                     <button
                       type="button"
                       onClick={() => setFormMediaType('video')}
                       className={cn(
-                        'px-2.5 py-1 rounded-lg font-bold text-[11px] flex items-center gap-1',
+                        'px-3 py-1 rounded-full font-semibold text-[11px] flex items-center gap-1',
                         formMediaType === 'video'
-                          ? 'bg-brand text-obsidian-950'
-                          : 'bg-obsidian-800 text-zinc-400'
+                          ? 'bg-white text-[#0F0F0F]'
+                          : 'bg-white/10 text-zinc-400'
                       )}
                     >
                       <Video className="w-3 h-3" />
-                      Vídeo Autoplay
+                      Vídeo de Preparo
                     </button>
                     <button
                       type="button"
                       onClick={() => setFormMediaType('image')}
                       className={cn(
-                        'px-2.5 py-1 rounded-lg font-bold text-[11px] flex items-center gap-1',
+                        'px-3 py-1 rounded-full font-semibold text-[11px] flex items-center gap-1',
                         formMediaType === 'image'
-                          ? 'bg-brand text-obsidian-950'
-                          : 'bg-obsidian-800 text-zinc-400'
+                          ? 'bg-white text-[#0F0F0F]'
+                          : 'bg-white/10 text-zinc-400'
                       )}
                     >
                       <ImageIcon className="w-3 h-3" />
-                      Foto HD
+                      Foto
                     </button>
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <div>
-                    <label className="text-[11px] text-zinc-400">
-                      URL da Mídia ({formMediaType === 'video' ? 'MP4 Vertical' : 'JPG/WebP'})
+                    <label className="text-[11px] text-[#A1A1AA]">
+                      Endereço do {formMediaType === 'video' ? 'Vídeo (MP4)' : 'Arquivo de Foto'}
                     </label>
                     <input
-                      type="url"
+                      type="text"
                       required
                       value={formMediaUrl}
                       onChange={(e) => setFormMediaUrl(e.target.value)}
-                      className="w-full mt-1 px-3 py-2 rounded-xl bg-obsidian-900 border border-white/10 text-white font-mono text-[11px]"
+                      className="w-full mt-1 px-3 py-2 rounded-xl bg-[#161616] border border-white/10 text-white font-mono text-[11px]"
                     />
                   </div>
                   {formMediaType === 'video' && (
                     <div>
-                      <label className="text-[11px] text-zinc-400">
-                        URL do Poster (Imagem de Capa Instantânea 4G)
+                      <label className="text-[11px] text-[#A1A1AA]">
+                        Foto de Capa (enquanto o vídeo carrega)
                       </label>
                       <input
-                        type="url"
+                        type="text"
                         value={formPosterUrl}
                         onChange={(e) => setFormPosterUrl(e.target.value)}
-                        className="w-full mt-1 px-3 py-2 rounded-xl bg-obsidian-900 border border-white/10 text-white font-mono text-[11px]"
+                        className="w-full mt-1 px-3 py-2 rounded-xl bg-[#161616] border border-white/10 text-white font-mono text-[11px]"
                       />
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Badges Selector */}
+              {/* Selo de Destaque */}
               <div className="space-y-1.5">
-                <label className="font-bold text-zinc-300">Badges de Destaque</label>
+                <label className="font-semibold text-zinc-300">
+                  Selo no Topo do Card
+                </label>
                 <div className="flex flex-wrap gap-1.5">
                   {AVAILABLE_BADGES.map((badge) => {
                     const active = formBadges.includes(badge);
@@ -703,10 +696,10 @@ export function MenuManagementView({
                         type="button"
                         onClick={() => handleToggleBadgeInForm(badge)}
                         className={cn(
-                          'px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all flex items-center gap-1',
+                          'px-3 py-1 rounded-full text-[11px] font-semibold border transition-all flex items-center gap-1',
                           active
-                            ? 'bg-amber-500/20 border-amber-400 text-amber-300'
-                            : 'bg-obsidian-950 border-white/10 text-zinc-400'
+                            ? 'bg-white text-[#0F0F0F] border-white'
+                            : 'bg-[#0F0F0F] border-white/10 text-zinc-400'
                         )}
                       >
                         {active && <Check className="w-3 h-3" />}
@@ -717,10 +710,9 @@ export function MenuManagementView({
                 </div>
               </div>
 
-              {/* Allergens & Ingredients */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="font-bold text-zinc-300">
+                  <label className="font-semibold text-zinc-300">
                     Alergênicos (separados por vírgula)
                   </label>
                   <input
@@ -728,46 +720,33 @@ export function MenuManagementView({
                     value={formAllergens}
                     onChange={(e) => setFormAllergens(e.target.value)}
                     placeholder="Glúten, Lactose, Pistache"
-                    className="w-full px-3 py-2 rounded-xl bg-obsidian-950 border border-white/10 text-white"
+                    className="w-full px-3 py-2 rounded-xl bg-[#0F0F0F] border border-white/10 text-white"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-bold text-zinc-300">
-                    Sugestão de Harmonização
+                  <label className="font-semibold text-zinc-300">
+                    Ingredientes (separados por vírgula)
                   </label>
                   <input
                     type="text"
-                    value={formPairing}
-                    onChange={(e) => setFormPairing(e.target.value)}
-                    placeholder="Ex: Harmoniza com Espresso Tonic"
-                    className="w-full px-3 py-2 rounded-xl bg-obsidian-950 border border-white/10 text-white"
+                    value={formIngredients}
+                    onChange={(e) => setFormIngredients(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-[#0F0F0F] border border-white/10 text-white"
                   />
                 </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="font-bold text-zinc-300">
-                  Ficha de Ingredientes (separados por vírgula)
-                </label>
-                <input
-                  type="text"
-                  value={formIngredients}
-                  onChange={(e) => setFormIngredients(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-obsidian-950 border border-white/10 text-white"
-                />
               </div>
 
               <div className="pt-3 border-t border-white/10 flex items-center justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2.5 rounded-xl bg-obsidian-800 text-zinc-300 font-bold"
+                  className="px-4 py-2.5 rounded-full bg-white/10 text-zinc-300 font-semibold"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand to-amber-500 text-obsidian-950 font-extrabold shadow-lg shadow-brand/25"
+                  className="px-5 py-2.5 rounded-full bg-white text-[#0F0F0F] font-semibold"
                 >
                   {editingItem ? 'Salvar Alterações' : 'Publicar no Cardápio'}
                 </button>

@@ -3,7 +3,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
-  Activity,
   BarChart3,
   ExternalLink,
   QrCode,
@@ -69,13 +68,7 @@ export function DashboardClient() {
     };
   }, []);
 
-  const {
-    itemAnalytics,
-    globalAvgDwellMs,
-    globalInteractionRate,
-    totalTrackedSessions,
-    totalHesitationEvents,
-  } = useMemo(
+  const { itemAnalytics, globalAvgDwellMs, totalTrackedSessions } = useMemo(
     () => computeMenuEngineeringAnalytics(items, categories, liveEvents),
     [items, categories, liveEvents]
   );
@@ -108,30 +101,23 @@ export function DashboardClient() {
   };
 
   return (
-    <div className="min-h-screen bg-obsidian-950 text-white flex flex-col">
-      {/* TOP ADMIN NAVIGATION HEADER */}
-      <header className="sticky top-0 z-40 bg-obsidian-950/90 backdrop-blur-xl border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3">
-          {/* Brand & Tenant Info */}
+    <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col">
+      {/* CABEÇALHO LIMPO DO LOJISTA */}
+      <header className="sticky top-0 z-40 bg-[#0F0F0F]/90 backdrop-blur-xl border-b border-white/10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={DEMO_RESTAURANT.logo_url}
                 alt={DEMO_RESTAURANT.name}
-                className="h-10 w-10 rounded-xl object-cover ring-2 ring-brand/50"
+                className="h-10 w-10 rounded-full object-cover border border-white/15"
               />
               <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-brand">
-                    Xplore Menu • Painel do Restaurante
-                  </span>
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 text-[10px] font-semibold">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    Telemetria Ativa
-                  </span>
-                </div>
-                <h1 className="text-base font-black text-white">
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-[#A1A1AA]">
+                  Painel do Estabelecimento
+                </span>
+                <h1 className="font-serif text-xl text-white">
                   {DEMO_RESTAURANT.name}
                 </h1>
               </div>
@@ -139,92 +125,89 @@ export function DashboardClient() {
 
             <Link
               href={`/${DEMO_RESTAURANT.slug}?source=nfc&location=mesa_04`}
-              className="md:hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand text-obsidian-950 text-xs font-extrabold"
+              className="md:hidden inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white text-[#0F0F0F] text-xs font-semibold"
             >
               <span>Ver Cardápio</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </Link>
           </div>
 
-          {/* Main Navigation Tabs */}
-          <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-obsidian-900 border border-white/[0.08] overflow-x-auto no-scrollbar">
+          {/* Abas Simples em Português */}
+          <div className="flex items-center gap-1.5 p-1 rounded-full bg-[#161616] border border-white/[0.08] overflow-x-auto no-scrollbar">
             <button
               type="button"
               onClick={() => setActiveTab('intelligence')}
               className={cn(
-                'px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shrink-0 transition-all',
+                'px-4 py-2 rounded-full text-xs font-semibold flex items-center gap-1.5 shrink-0 transition-all',
                 activeTab === 'intelligence'
-                  ? 'bg-gradient-to-r from-brand to-amber-500 text-obsidian-950 shadow-md'
+                  ? 'bg-white text-[#0F0F0F]'
                   : 'text-zinc-400 hover:text-white'
               )}
             >
-              <BarChart3 className="w-4 h-4" />
-              <span>Inteligência & Engenharia</span>
+              <BarChart3 className="w-3.5 h-3.5" />
+              <span>Resumo & Vendas</span>
             </button>
 
             <button
               type="button"
               onClick={() => setActiveTab('catalog')}
               className={cn(
-                'px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shrink-0 transition-all',
+                'px-4 py-2 rounded-full text-xs font-semibold flex items-center gap-1.5 shrink-0 transition-all',
                 activeTab === 'catalog'
-                  ? 'bg-gradient-to-r from-brand to-amber-500 text-obsidian-950 shadow-md'
+                  ? 'bg-white text-[#0F0F0F]'
                   : 'text-zinc-400 hover:text-white'
               )}
             >
-              <UtensilsCrossed className="w-4 h-4" />
-              <span>Gestão de Cardápio ({items.length})</span>
+              <UtensilsCrossed className="w-3.5 h-3.5" />
+              <span>Pratos & Preços ({items.length})</span>
             </button>
 
             <button
               type="button"
               onClick={() => setActiveTab('nfc')}
               className={cn(
-                'px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shrink-0 transition-all',
+                'px-4 py-2 rounded-full text-xs font-semibold flex items-center gap-1.5 shrink-0 transition-all',
                 activeTab === 'nfc'
-                  ? 'bg-gradient-to-r from-brand to-amber-500 text-obsidian-950 shadow-md'
+                  ? 'bg-white text-[#0F0F0F]'
                   : 'text-zinc-400 hover:text-white'
               )}
             >
-              <QrCode className="w-4 h-4" />
-              <span>Gerador NFC / QR ({touchpoints.length})</span>
+              <QrCode className="w-3.5 h-3.5" />
+              <span>Mesas & QR Code ({touchpoints.length})</span>
             </button>
           </div>
 
-          {/* Right Actions: Refresh Live Telemetry + Open Social Menu */}
+          {/* Botões à Direita */}
           <div className="hidden md:flex items-center gap-2">
             <button
               type="button"
               onClick={refreshData}
-              className="px-3 py-2 rounded-xl bg-obsidian-900 hover:bg-obsidian-800 border border-white/10 text-xs font-semibold text-zinc-300 flex items-center gap-1.5"
-              title="Sincronizar últimos eventos de telemetria"
+              className="px-3.5 py-2 rounded-full bg-[#161616] hover:bg-white/10 border border-white/10 text-xs font-medium text-zinc-300 flex items-center gap-1.5"
+              title="Atualizar dados das mesas"
             >
               <RefreshCw className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Sync ({liveEvents.length} eventos locais)</span>
+              <span>Atualizar</span>
             </button>
 
             <Link
               href={`/${DEMO_RESTAURANT.slug}?source=nfc&location=mesa_04`}
-              className="px-4 py-2 rounded-xl bg-obsidian-800 hover:bg-brand hover:text-obsidian-950 border border-brand/40 text-xs font-bold text-brand-light flex items-center gap-1.5 transition-all"
+              className="px-4 py-2 rounded-full bg-white text-[#0F0F0F] text-xs font-semibold flex items-center gap-1.5 hover:bg-zinc-200 transition-all"
             >
-              <Activity className="w-3.5 h-3.5" />
-              <span>Abrir Cardápio Social</span>
+              <span>Ver Cardápio do Cliente</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </Link>
           </div>
         </div>
       </header>
 
-      {/* MAIN CONTENT CONTAINER */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8">
+      {/* CONTEÚDO PRINCIPAL */}
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-8">
         {activeTab === 'intelligence' && (
           <BehavioralIntelligenceView
+            items={items}
             analytics={itemAnalytics}
             globalAvgDwellMs={globalAvgDwellMs}
-            globalInteractionRate={globalInteractionRate}
             totalTrackedSessions={totalTrackedSessions}
-            totalHesitationEvents={totalHesitationEvents}
-            liveEventsCount={liveEvents.length}
             onEditItemRequest={handleEditItemFromIntelligence}
           />
         )}
