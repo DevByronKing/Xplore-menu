@@ -153,7 +153,7 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
       {
         id: 'm-1a',
         type: 'video',
-        url: '/videos/prep-focaccia-burrata.mp4?v=2',
+        url: '/videos/prep-focaccia-burrata.mp4?v=3',
         poster:
           'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=900&q=80',
         alt: 'Vídeo do preparo da Focaccia Burrata & Pistache',
@@ -205,7 +205,7 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
       {
         id: 'm-2a',
         type: 'video',
-        url: '/videos/prep-focaccia-figo.mp4?v=2',
+        url: '/videos/prep-focaccia-figo.mp4?v=3',
         poster:
           'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=900&q=80',
         alt: 'Vídeo de montagem da Focaccia com figos e prosciutto',
@@ -256,7 +256,7 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
       {
         id: 'm-3a',
         type: 'video',
-        url: '/videos/prep-eggs-royale.mp4?v=2',
+        url: '/videos/prep-eggs-royale.mp4?v=3',
         poster:
           'https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=900&q=80',
         alt: 'Vídeo do preparo dos ovos pochê e cogumelos trufados',
@@ -306,7 +306,7 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
       {
         id: 'm-4a',
         type: 'video',
-        url: '/videos/prep-french-toast.mp4?v=2',
+        url: '/videos/prep-french-toast.mp4?v=3',
         poster:
           'https://images.unsplash.com/photo-1484723091739-30a097e8f929?auto=format&fit=crop&w=900&q=80',
         alt: 'Vídeo caramelizando o brioche e finalizando com calda',
@@ -356,7 +356,7 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
       {
         id: 'm-5a',
         type: 'video',
-        url: '/videos/prep-pistachio-latte.mp4?v=2',
+        url: '/videos/prep-pistachio-latte.mp4?v=3',
         poster:
           'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=900&q=80',
         alt: 'Vídeo extraindo o espresso e vaporizando o Pistachio Latte',
@@ -405,7 +405,7 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
       {
         id: 'm-6a',
         type: 'video',
-        url: '/videos/prep-v60-geisha.mp4?v=2',
+        url: '/videos/prep-v60-geisha.mp4?v=3',
         poster:
           'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=900&q=80',
         alt: 'Vídeo da infusão manual no método Hario V60',
@@ -452,7 +452,7 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
       {
         id: 'm-7a',
         type: 'video',
-        url: '/videos/prep-espresso-tonic.mp4?v=2',
+        url: '/videos/prep-espresso-tonic.mp4?v=3',
         poster:
           'https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?auto=format&fit=crop&w=900&q=80',
         alt: 'Vídeo formando as duas camadas do Espresso Tonic com gelo',
@@ -501,7 +501,7 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
       {
         id: 'm-8a',
         type: 'video',
-        url: '/videos/prep-matcha-cloud.mp4?v=2',
+        url: '/videos/prep-matcha-cloud.mp4?v=3',
         poster:
           'https://images.unsplash.com/photo-1536256263959-770b48d82b0a?auto=format&fit=crop&w=900&q=80',
         alt: 'Vídeo batendo o Matcha Uji e montando sobre compota de morango',
