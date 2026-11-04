@@ -6,8 +6,10 @@ import {
   BarChart3,
   BellRing,
   ExternalLink,
+  Moon,
   QrCode,
   RefreshCw,
+  Sun,
   UtensilsCrossed,
 } from 'lucide-react';
 import {
@@ -39,6 +41,7 @@ import {
 } from '@/lib/storage/ordersStorage';
 import { getLocalTelemetryHistory } from '@/lib/storage/offlinePersistence';
 import { computeMenuEngineeringAnalytics } from '@/lib/analytics/menuEngineeringEngine';
+import { useTheme } from '@/context/ThemeContext';
 import { BehavioralIntelligenceView } from '@/components/dashboard/BehavioralIntelligenceView';
 import { MenuManagementView } from '@/components/dashboard/MenuManagementView';
 import { NfcGeneratorView } from '@/components/dashboard/NfcGeneratorView';
@@ -48,6 +51,7 @@ import { cn } from '@/lib/utils';
 type DashboardTab = 'orders' | 'intelligence' | 'catalog' | 'nfc';
 
 export function DashboardClient() {
+  const { isLight, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<DashboardTab>('intelligence');
   const [items, setItems] = useState<MenuItem[]>(DEMO_MENU_ITEMS);
   const [categories, setCategories] = useState<Category[]>(DEMO_CATEGORIES);
@@ -125,7 +129,7 @@ export function DashboardClient() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col">
+    <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col theme-adaptive">
       {/* CABEÇALHO LIMPO DO LOJISTA */}
       <header className="sticky top-0 z-40 bg-[#0F0F0F]/90 backdrop-blur-xl border-b border-white/10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
@@ -148,12 +152,24 @@ export function DashboardClient() {
             </div>
 
             <div className="flex lg:hidden items-center gap-2">
+              <button
+                type="button"
+                onClick={toggleTheme}
+                title={isLight ? 'Mudar para Modo Escuro' : 'Mudar para Modo Claro'}
+                className="p-2 rounded-full bg-white/[0.08] border border-white/10 text-white"
+              >
+                {isLight ? (
+                  <Moon className="w-3.5 h-3.5" />
+                ) : (
+                  <Sun className="w-3.5 h-3.5 text-amber-400" />
+                )}
+              </button>
               <Link
                 href="/pedidos"
                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-semibold"
               >
                 <BellRing className="w-3.5 h-3.5" />
-                <span>Tela Cozinha</span>
+                <span>Cozinha</span>
               </Link>
               <Link
                 href={`/${DEMO_RESTAURANT.slug}?source=nfc&location=mesa_04`}
@@ -191,7 +207,7 @@ export function DashboardClient() {
                   className={cn(
                     'px-1.5 py-0.5 rounded-full text-[10px] font-bold',
                     activeTab === 'orders'
-                      ? 'bg-[#0F0F0F] text-amber-400'
+                      ? 'bg-amber-400 text-[#0F0F0F]'
                       : 'bg-amber-400 text-[#0F0F0F]'
                   )}
                 >
@@ -245,6 +261,25 @@ export function DashboardClient() {
 
           {/* Botões à Direita */}
           <div className="hidden lg:flex items-center gap-2">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="px-3 py-2 rounded-full bg-[#161616] hover:bg-white/10 border border-white/10 text-xs font-medium text-zinc-300 flex items-center gap-1.5"
+              title={isLight ? 'Mudar para Modo Escuro' : 'Mudar para Modo Claro'}
+            >
+              {isLight ? (
+                <>
+                  <Moon className="w-3.5 h-3.5" />
+                  <span>Modo Escuro</span>
+                </>
+              ) : (
+                <>
+                  <Sun className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Modo Claro</span>
+                </>
+              )}
+            </button>
+
             <Link
               href="/pedidos"
               className="px-3.5 py-2 rounded-full bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/30 text-xs font-semibold text-amber-300 flex items-center gap-1.5"

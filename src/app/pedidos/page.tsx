@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function KitchenLiveOrdersPage() {
   return (
-    <div className="min-h-screen bg-[#0F0F0F] text-white">
+    <div className="min-h-screen bg-[#0F0F0F] text-white theme-adaptive">
       <header className="border-b border-white/10 bg-[#0F0F0F]/90 backdrop-blur-xl sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <div>

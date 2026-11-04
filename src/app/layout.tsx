@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter, Playfair_Display } from 'next/font/google';
+import { ThemeProvider } from '@/context/ThemeContext';
 import './globals.css';
 
 const inter = Inter({
@@ -35,9 +36,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className={`${inter.variable} ${playfair.variable} dark`}>
-      <body className="font-sans antialiased bg-[#0F0F0F] text-white min-h-screen">
-        {children}
+    <html lang="pt-BR" className={`${inter.variable} ${playfair.variable}`} data-theme="dark">
+      <body className="font-sans antialiased min-h-screen">
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

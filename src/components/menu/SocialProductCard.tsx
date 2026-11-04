@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronDown, Heart, X } from 'lucide-react';
 import type { MenuItem } from '@/types/database';
 import { useMenuSession } from '@/context/MenuSessionContext';
+import { useTheme } from '@/context/ThemeContext';
 import { useItemDwellObserver } from '@/hooks/useItemDwellObserver';
 import { cn, formatCurrencyBRL } from '@/lib/utils';
 
@@ -24,11 +25,13 @@ export function SocialProductCard({
     removeItemFromSelection,
     trackEvent,
   } = useMenuSession();
+  const { isLight } = useTheme();
 
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [isAllergensExpanded, setIsAllergensExpanded] = useState(false);
   const [showDoubleTapHeart, setShowDoubleTapHeart] = useState(false);
   const [videoError, setVideoError] = useState(false);
+  const [videoProgressPct, setVideoProgressPct] = useState(0);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const lastTapRef = useRef<number>(0);
@@ -69,6 +72,7 @@ export function SocialProductCard({
 
   useEffect(() => {
     setVideoError(false);
+    setVideoProgressPct(0);
     if (
       activeMedia?.type === 'video' &&
       isVisibleInViewport &&
@@ -77,6 +81,13 @@ export function SocialProductCard({
       videoRef.current.play().catch(() => {});
     }
   }, [currentMediaIndex, activeMedia?.type, isVisibleInViewport]);
+
+  const handleVideoTimeUpdate = () => {
+    const vid = videoRef.current;
+    if (!vid || !vid.duration || !Number.isFinite(vid.duration)) return;
+    const pct = Math.min(100, Math.max(0, (vid.currentTime / vid.duration) * 100));
+    setVideoProgressPct(pct);
+  };
 
   const handleNextMedia = useCallback(() => {
     if (mediaList.length <= 1) return;
@@ -183,8 +194,12 @@ export function SocialProductCard({
       className={cn(
         'relative w-full h-[76dvh] min-h-[470px] max-h-[650px] scroll-mt-28 rounded-3xl overflow-hidden bg-[#161616] select-none mb-5 will-change-transform transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]',
         isVisibleInViewport
-          ? 'scale-100 opacity-100 shadow-2xl ring-1 ring-white/15'
-          : 'scale-[0.975] opacity-80 shadow-lg ring-1 ring-white/[0.06]'
+          ? isLight
+            ? 'scale-100 opacity-100 shadow-[0_22px_50px_rgba(20,20,19,0.22)] ring-1 ring-black/15'
+            : 'scale-100 opacity-100 shadow-2xl ring-1 ring-white/15'
+          : isLight
+            ? 'scale-[0.975] opacity-85 shadow-md ring-1 ring-black/10'
+            : 'scale-[0.975] opacity-80 shadow-lg ring-1 ring-white/[0.06]'
       )}
       onClick={handleMediaClick}
       onTouchStart={handleTouchStart}
@@ -200,6 +215,7 @@ export function SocialProductCard({
           loop
           playsInline
           preload={priorityLoad ? 'auto' : 'metadata'}
+          onTimeUpdate={handleVideoTimeUpdate}
           onError={() => setVideoError(true)}
           onEnded={() => trackEvent('video_replay', item.id)}
           className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out"
@@ -216,39 +232,49 @@ export function SocialProductCard({
       )}
 
       {/* Subtle Top Vignette for Story Bars & Badge */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/55 to-transparent z-10" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/60 to-transparent z-10" />
 
       {/* TOP INTERNAL BAR: Instagram Stories Progress Bars + Floating Badge */}
       <div className="absolute top-0 inset-x-0 z-20 p-4 space-y-3">
-        {/* Story Progress Bars */}
+        {/* Story Progress Bars (shows real-time playback progress on video slide) */}
         {mediaList.length > 1 && (
           <div
             className="flex items-center gap-1.5"
             onClick={(e) => e.stopPropagation()}
           >
-            {mediaList.map((media, idx) => (
-              <button
-                key={media.id}
-                type="button"
-                aria-label={`Mídia ${idx + 1}`}
-                onClick={() => {
-                  setCurrentMediaIndex(idx);
-                  trackEvent('media_swipe', item.id, null, { media_index: idx });
-                }}
-                className="h-1 flex-1 rounded-full bg-white/30 overflow-hidden transition-all"
-              >
-                <div
-                  className={cn(
-                    'h-full rounded-full transition-all duration-300',
-                    idx === currentMediaIndex ? 'w-full bg-white' : 'w-0'
-                  )}
-                />
-              </button>
-            ))}
+            {mediaList.map((media, idx) => {
+              const isCurrent = idx === currentMediaIndex;
+              const isPast = idx < currentMediaIndex;
+              const barWidth = isCurrent
+                ? media.type === 'video' && videoProgressPct > 0
+                  ? `${videoProgressPct}%`
+                  : '100%'
+                : isPast
+                  ? '100%'
+                  : '0%';
+
+              return (
+                <button
+                  key={media.id}
+                  type="button"
+                  aria-label={`Mídia ${idx + 1}`}
+                  onClick={() => {
+                    setCurrentMediaIndex(idx);
+                    trackEvent('media_swipe', item.id, null, { media_index: idx });
+                  }}
+                  className="h-1 flex-1 rounded-full bg-white/30 overflow-hidden transition-all"
+                >
+                  <div
+                    style={{ width: barWidth }}
+                    className="h-full rounded-full bg-white transition-[width] duration-150 ease-linear"
+                  />
+                </button>
+              );
+            })}
           </div>
         )}
 
-        {/* Top-Left Floating Badge (BEST SELLER / NOVO / SUGESTÃO DO CHEF) */}
+        {/* Top-Left Floating Badge (MAIS PEDIDO / NOVIDADE / SUGESTÃO DO CHEF) */}
         <div className="flex items-center justify-between">
           {primaryBadge ? (
             <span className="bg-black/70 text-white text-[10px] font-medium uppercase tracking-wider px-3 py-1 rounded-full backdrop-blur-md">
@@ -275,9 +301,9 @@ export function SocialProductCard({
         </div>
       )}
 
-      {/* BOTTOM INTERNAL FOOTER (Gradient Overlay) */}
+      {/* BOTTOM INTERNAL FOOTER (Gradient Overlay - always high contrast white over dark photo vignette) */}
       <div
-        className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/95 via-black/65 to-transparent pt-20 pb-5 px-5 flex flex-col justify-end"
+        className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/95 via-black/70 to-transparent pt-20 pb-5 px-5 flex flex-col justify-end"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Expandable Allergens & Ingredients Popover Sheet */}
@@ -301,7 +327,7 @@ export function SocialProductCard({
               {item.allergens.map((allergen) => (
                 <span
                   key={allergen}
-                  className="px-2 py-0.5 rounded-full bg-white/[0.1] text-white text-[11px]"
+                  className="px-2 py-0.5 rounded-full bg-white/[0.12] text-white text-[11px]"
                 >
                   {allergen}
                 </span>
@@ -309,7 +335,7 @@ export function SocialProductCard({
             </div>
 
             {item.ingredients.length > 0 && (
-              <p className="text-[11px] text-[#A1A1AA] leading-relaxed pt-1 border-t border-white/10">
+              <p className="text-[11px] text-[#D4D4D8] leading-relaxed pt-1 border-t border-white/10">
                 {item.ingredients.join(' • ')}
               </p>
             )}
@@ -317,16 +343,16 @@ export function SocialProductCard({
         )}
 
         {/* Line 1: Editorial Serif Title */}
-        <h2 className="font-serif text-3xl text-white font-normal tracking-tight leading-[1.12]">
+        <h2 className="font-serif text-3xl text-white font-normal tracking-tight leading-[1.12] drop-shadow-sm">
           {item.name}
         </h2>
 
-        {/* Line 2: Description of ingredients in text-xs text-zinc-300 line-clamp-2 */}
-        <p className="mt-1.5 text-xs text-zinc-300 line-clamp-2 leading-relaxed">
+        {/* Line 2: Description of ingredients */}
+        <p className="mt-1.5 text-xs text-zinc-200 line-clamp-2 leading-relaxed">
           {item.description}
         </p>
 
-        {/* Line 3 (Base): Price on left + ALLERGENS v in center-left + Circular Favorite button on right */}
+        {/* Line 3 (Base): Price on left + ALERGÊNICOS v in center-left + Circular Favorite button on right */}
         <div className="mt-4 pt-1 flex items-center justify-between gap-3">
           <div className="flex items-center gap-5">
             <span className="text-base font-medium text-white tracking-tight">
@@ -337,7 +363,7 @@ export function SocialProductCard({
               type="button"
               onClick={handleToggleAllergens}
               aria-expanded={isAllergensExpanded}
-              className="text-[11px] uppercase tracking-widest text-[#A1A1AA] hover:text-white flex items-center gap-1 transition-colors py-1"
+              className="text-[11px] uppercase tracking-widest text-zinc-300 hover:text-white flex items-center gap-1 transition-colors py-1"
             >
               <span>Alergênicos</span>
               <ChevronDown
@@ -361,7 +387,7 @@ export function SocialProductCard({
               'w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 shrink-0',
               isSaved
                 ? 'bg-white text-[#0F0F0F] border border-white shadow-md animate-heart-pop'
-                : 'bg-white/[0.12] border border-white/15 text-white backdrop-blur-md hover:bg-white/[0.2]'
+                : 'bg-white/[0.14] border border-white/20 text-white backdrop-blur-md hover:bg-white/[0.22]'
             )}
           >
             <Heart

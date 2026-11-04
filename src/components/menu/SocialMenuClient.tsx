@@ -9,6 +9,7 @@ import type {
   Restaurant,
 } from '@/types/database';
 import { MenuSessionProvider } from '@/context/MenuSessionContext';
+import { useTheme } from '@/context/ThemeContext';
 import { SocialMenuHeader } from '@/components/menu/SocialMenuHeader';
 import { SocialProductCard } from '@/components/menu/SocialProductCard';
 import { SelectionDrawer } from '@/components/menu/SelectionDrawer';
@@ -19,6 +20,7 @@ import {
   loadStoredMenuItems,
   loadStoredTouchpoints,
 } from '@/lib/storage/menuCatalogStorage';
+import { cn } from '@/lib/utils';
 
 interface SocialMenuClientProps {
   restaurant: Restaurant;
@@ -37,6 +39,7 @@ export function SocialMenuClient({
   initialSourceParam,
   initialLocationParam,
 }: SocialMenuClientProps) {
+  const { isLight } = useTheme();
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [items, setItems] = useState<MenuItem[]>(initialItems);
   const [touchpoints, setTouchpoints] =
@@ -89,7 +92,14 @@ export function SocialMenuClient({
       {/* Impressive Editorial Entry Splash Screen */}
       <MenuEntrySplash restaurant={restaurant} />
 
-      <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col selection:bg-white selection:text-[#0F0F0F]">
+      <div
+        className={cn(
+          'min-h-screen flex flex-col transition-colors duration-250',
+          isLight
+            ? 'bg-[#F6F4EF] text-[#141413] selection:bg-[#141413] selection:text-white'
+            : 'bg-[#0F0F0F] text-white selection:bg-white selection:text-[#0F0F0F]'
+        )}
+      >
         {/* Sticky Header & Clean Horizontal Category Pills */}
         <SocialMenuHeader
           categories={categories}
@@ -107,14 +117,29 @@ export function SocialMenuClient({
         >
           {filteredItems.length === 0 ? (
             <div className="py-24 text-center space-y-3">
-              <Compass className="w-8 h-8 text-zinc-600 mx-auto" />
-              <p className="text-sm font-medium text-zinc-300">
+              <Compass
+                className={cn(
+                  'w-8 h-8 mx-auto',
+                  isLight ? 'text-stone-400' : 'text-zinc-600'
+                )}
+              />
+              <p
+                className={cn(
+                  'text-sm font-medium',
+                  isLight ? 'text-stone-600' : 'text-zinc-300'
+                )}
+              >
                 Nenhum item nesta categoria no momento.
               </p>
               <button
                 type="button"
                 onClick={() => setActiveCategorySlug('destaques')}
-                className="px-4 py-2 rounded-full bg-white text-[#0F0F0F] text-xs font-semibold"
+                className={cn(
+                  'px-4 py-2 rounded-full text-xs font-semibold',
+                  isLight
+                    ? 'bg-[#141413] text-white'
+                    : 'bg-white text-[#0F0F0F]'
+                )}
               >
                 Ver Destaques
               </button>

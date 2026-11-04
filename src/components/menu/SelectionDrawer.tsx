@@ -121,7 +121,7 @@ export function SelectionDrawer() {
     <>
       {/* FLOATING BOTTOM PILL (Visible when items are saved) */}
       {totalSelectionCount > 0 && !isDrawerOpen && (
-        <div className="fixed bottom-5 inset-x-0 z-40 px-5 pointer-events-none">
+        <div className="fixed bottom-5 inset-x-0 z-40 px-5 pointer-events-none theme-adaptive">
           <div className="max-w-md mx-auto pointer-events-auto">
             <button
               type="button"
@@ -130,7 +130,7 @@ export function SelectionDrawer() {
                 setOrderStatus('editing');
                 setIsDrawerOpen(true);
               }}
-              className="w-full flex items-center justify-between gap-3 px-5 py-3.5 rounded-full bg-white text-[#0F0F0F] shadow-2xl shadow-black/90 transition-transform active:scale-[0.98]"
+              className="w-full flex items-center justify-between gap-3 px-5 py-3.5 rounded-full bg-white text-[#0F0F0F] shadow-2xl shadow-black/40 transition-transform active:scale-[0.98]"
             >
               <div className="flex items-center gap-2.5">
                 <span className="h-6 min-w-[24px] px-1.5 rounded-full bg-[#0F0F0F] text-white text-xs font-bold flex items-center justify-center">
@@ -151,10 +151,10 @@ export function SelectionDrawer() {
 
       {/* SLIDE-UP SHEET */}
       {isDrawerOpen && (
-        <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/80 backdrop-blur-sm animate-fadeIn">
+        <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/75 backdrop-blur-sm animate-fadeIn">
           <div className="flex-1" onClick={closeDrawer} />
 
-          <div className="w-full max-w-md mx-auto max-h-[88dvh] rounded-t-3xl bg-[#161616] border-t border-white/10 shadow-2xl flex flex-col overflow-hidden animate-slide-up">
+          <div className="w-full max-w-md mx-auto max-h-[88dvh] rounded-t-3xl bg-[#161616] border-t border-white/10 shadow-2xl flex flex-col overflow-hidden animate-slide-up theme-adaptive">
             {/* Sheet Handle & Header */}
             <div className="px-5 pt-3 pb-3.5 border-b border-white/[0.08]">
               <div className="w-10 h-1 rounded-full bg-white/20 mx-auto mb-3" />

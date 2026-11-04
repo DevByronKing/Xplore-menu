@@ -6,7 +6,6 @@ import {
   Edit3,
   FolderPlus,
   Image as ImageIcon,
-  Link2,
   Loader2,
   Plus,
   RotateCcw,
@@ -74,7 +73,7 @@ export function MenuManagementView({
     'Farinha italiana Tipo 00, Levain 48h, Azeite extravirgem'
   );
   const [formMediaType, setFormMediaType] = useState<'video' | 'image'>('video');
-  const [formMediaUrl, setFormMediaUrl] = useState('/videos/prep-focaccia-burrata.mp4?v=2');
+  const [formMediaUrl, setFormMediaUrl] = useState('/videos/prep-focaccia-burrata.mp4?v=4');
   const [formPosterUrl, setFormPosterUrl] = useState(
     'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=900&q=80'
   );
@@ -85,8 +84,8 @@ export function MenuManagementView({
   const [isUploadingMedia, setIsUploadingMedia] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [uploadStatusMsg, setUploadStatusMsg] = useState<string | null>(null);
-  const [showManualUrlInputs, setShowManualUrlInputs] = useState(false);
   const galleryFileInputRef = useRef<HTMLInputElement | null>(null);
+  const galleryPosterInputRef = useRef<HTMLInputElement | null>(null);
 
   const openEditorForItem = (item: MenuItem) => {
     setEditingItem(item);
@@ -108,7 +107,6 @@ export function MenuManagementView({
     setFormIsFeatured(Boolean(item.is_featured));
     setUploadedFileName(null);
     setUploadStatusMsg(null);
-    setShowManualUrlInputs(false);
     setIsModalOpen(true);
   };
 
@@ -131,7 +129,7 @@ export function MenuManagementView({
       'Massa de fermentação natural 48h, Queijo artesanal, Flor de sal'
     );
     setFormMediaType('video');
-    setFormMediaUrl('/videos/prep-focaccia-burrata.mp4?v=2');
+    setFormMediaUrl('/videos/prep-focaccia-burrata.mp4?v=4');
     setFormPosterUrl(
       'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=900&q=80'
     );
@@ -139,7 +137,6 @@ export function MenuManagementView({
     setFormIsFeatured(true);
     setUploadedFileName(null);
     setUploadStatusMsg(null);
-    setShowManualUrlInputs(false);
     setIsModalOpen(true);
   };
 
@@ -184,6 +181,28 @@ export function MenuManagementView({
       setIsUploadingMedia(false);
       if (galleryFileInputRef.current) {
         galleryFileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleGalleryPosterSelect = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingMedia(true);
+    setUploadStatusMsg('Enviando foto de capa da galeria...');
+    try {
+      const result = await uploadMediaFromGallery(file);
+      setFormPosterUrl(result.mediaUrl);
+      setUploadStatusMsg('Foto de capa atualizada da galeria!');
+    } catch {
+      setUploadStatusMsg('Não foi possível enviar a foto de capa.');
+    } finally {
+      setIsUploadingMedia(false);
+      if (galleryPosterInputRef.current) {
+        galleryPosterInputRef.current.value = '';
       }
     }
   };
@@ -453,7 +472,7 @@ export function MenuManagementView({
                   : 'border-rose-500/30 opacity-75 bg-[#0F0F0F]'
               )}
             >
-              <div className="relative h-28 w-24 rounded-2xl overflow-hidden bg-[#0F0F0F] shrink-0">
+              <div className="relative h-28 w-24 rounded-2xl overflow-hidden bg-[#0F0F0F] shrink-0 keep-dark-media">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={thumb}
@@ -580,7 +599,7 @@ export function MenuManagementView({
               onSubmit={handleSubmitForm}
               className="p-6 space-y-4 max-h-[82vh] overflow-y-auto text-xs"
             >
-              {/* UPLOAD DIRETO DA GALERIA DO CELULAR */}
+              {/* UPLOAD DIRETO DA GALERIA DO CELULAR (SUPABASE STORAGE) */}
               <div className="p-4 rounded-2xl bg-[#0F0F0F] border border-white/15 space-y-3.5">
                 <div className="flex items-center justify-between gap-2">
                   <div>
@@ -589,7 +608,7 @@ export function MenuManagementView({
                       Vídeo ou Foto do Prato (Galeria do Celular)
                     </span>
                     <p className="text-[11px] text-[#A1A1AA] mt-0.5">
-                      Escolha um vídeo vertical (9:16) ou foto direto do seu aparelho.
+                      Envie direto da galeria do celular para o servidor (Supabase Storage).
                     </p>
                   </div>
 
@@ -598,12 +617,19 @@ export function MenuManagementView({
                   </span>
                 </div>
 
-                {/* Input oculto acionado pelo botão */}
+                {/* Inputs ocultos acionados pelos botões da galeria */}
                 <input
                   ref={galleryFileInputRef}
                   type="file"
                   accept="video/*,image/*"
                   onChange={handleGalleryFileSelect}
+                  className="hidden"
+                />
+                <input
+                  ref={galleryPosterInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleGalleryPosterSelect}
                   className="hidden"
                 />
 
@@ -646,9 +672,19 @@ export function MenuManagementView({
                       ) : (
                         <>
                           <UploadCloud className="w-4 h-4" />
-                          <span>Escolher Vídeo ou Foto da Galeria do Celular</span>
+                          <span>Escolher Vídeo da Galeria do Celular</span>
                         </>
                       )}
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={isUploadingMedia}
+                      onClick={() => galleryPosterInputRef.current?.click()}
+                      className="w-full py-2 px-3 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] border border-white/10 text-zinc-200 font-semibold text-[11px] flex items-center justify-center gap-1.5 transition-all disabled:opacity-60"
+                    >
+                      <ImageIcon className="w-3.5 h-3.5 text-sky-400" />
+                      <span>Trocar Foto de Capa da Galeria (Opcional)</span>
                     </button>
 
                     {uploadStatusMsg && (
@@ -660,84 +696,8 @@ export function MenuManagementView({
                         </span>
                       </div>
                     )}
-
-                    <div className="flex items-center justify-between pt-1">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setShowManualUrlInputs((prev) => !prev)
-                        }
-                        className="text-[11px] text-zinc-400 hover:text-white inline-flex items-center gap-1 underline underline-offset-4"
-                      >
-                        <Link2 className="w-3 h-3" />
-                        <span>
-                          {showManualUrlInputs
-                            ? 'Ocultar opção de link manual'
-                            : 'Ou informar link manualmente'}
-                        </span>
-                      </button>
-                    </div>
                   </div>
                 </div>
-
-                {/* Opção secundária caso queira colar URL manualmente */}
-                {showManualUrlInputs && (
-                  <div className="pt-3 border-t border-white/10 space-y-2">
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => setFormMediaType('video')}
-                        className={cn(
-                          'px-3 py-1 rounded-full font-semibold text-[11px] flex items-center gap-1',
-                          formMediaType === 'video'
-                            ? 'bg-white text-[#0F0F0F]'
-                            : 'bg-white/10 text-zinc-400'
-                        )}
-                      >
-                        <Video className="w-3 h-3" />
-                        Vídeo
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setFormMediaType('image')}
-                        className={cn(
-                          'px-3 py-1 rounded-full font-semibold text-[11px] flex items-center gap-1',
-                          formMediaType === 'image'
-                            ? 'bg-white text-[#0F0F0F]'
-                            : 'bg-white/10 text-zinc-400'
-                        )}
-                      >
-                        <ImageIcon className="w-3 h-3" />
-                        Foto
-                      </button>
-                    </div>
-
-                    <div>
-                      <label className="text-[11px] text-[#A1A1AA]">
-                        Endereço do {formMediaType === 'video' ? 'Vídeo (MP4)' : 'Arquivo de Foto'}
-                      </label>
-                      <input
-                        type="text"
-                        value={formMediaUrl}
-                        onChange={(e) => setFormMediaUrl(e.target.value)}
-                        className="w-full mt-1 px-3 py-2 rounded-xl bg-[#161616] border border-white/10 text-white font-mono text-[11px]"
-                      />
-                    </div>
-                    {formMediaType === 'video' && (
-                      <div>
-                        <label className="text-[11px] text-[#A1A1AA]">
-                          Foto de Capa (gerada automaticamente ao enviar vídeo)
-                        </label>
-                        <input
-                          type="text"
-                          value={formPosterUrl}
-                          onChange={(e) => setFormPosterUrl(e.target.value)}
-                          className="w-full mt-1 px-3 py-2 rounded-xl bg-[#161616] border border-white/10 text-white font-mono text-[11px]"
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

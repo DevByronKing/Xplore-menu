@@ -2,9 +2,10 @@
 
 import React, { useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Heart } from 'lucide-react';
+import { Heart, Moon, Sun } from 'lucide-react';
 import type { Category } from '@/types/database';
 import { useMenuSession } from '@/context/MenuSessionContext';
+import { useTheme } from '@/context/ThemeContext';
 import { cn } from '@/lib/utils';
 
 interface SocialMenuHeaderProps {
@@ -26,6 +27,7 @@ export function SocialMenuHeader({
     likedItemIds,
     setIsDrawerOpen,
   } = useMenuSession();
+  const { isLight, toggleTheme } = useTheme();
 
   const savedCount = totalSelectionCount || likedItemIds.length;
   const tapCountRef = useRef(0);
@@ -48,15 +50,27 @@ export function SocialMenuHeader({
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-[#0F0F0F]/85 backdrop-blur-xl border-b border-white/[0.04]">
+    <header
+      className={cn(
+        'sticky top-0 z-40 w-full backdrop-blur-xl border-b transition-colors duration-200',
+        isLight
+          ? 'bg-[#F6F4EF]/90 border-black/[0.07]'
+          : 'bg-[#0F0F0F]/85 border-white/[0.04]'
+      )}
+    >
       <div className="max-w-md mx-auto">
         {/* Top Brand Row */}
-        <div className="px-4 pt-3.5 pb-2.5 flex items-center justify-between gap-3">
+        <div className="px-4 pt-3.5 pb-2.5 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2.5 min-w-0">
             <button
               type="button"
               onClick={handleLogoSecretTap}
-              className="h-8 w-8 rounded-full overflow-hidden bg-white/10 shrink-0 border border-white/15 focus:outline-none"
+              className={cn(
+                'h-8 w-8 rounded-full overflow-hidden shrink-0 border focus:outline-none',
+                isLight
+                  ? 'bg-black/5 border-black/15'
+                  : 'bg-white/10 border-white/15'
+              )}
               aria-label={restaurant.name}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -67,32 +81,76 @@ export function SocialMenuHeader({
               />
             </button>
             <div className="min-w-0 flex items-center gap-2">
-              <h1 className="text-sm font-semibold tracking-tight text-white truncate">
+              <h1
+                className={cn(
+                  'text-sm font-semibold tracking-tight truncate',
+                  isLight ? 'text-[#141413]' : 'text-white'
+                )}
+              >
                 {restaurant.name}
               </h1>
               {sessionOrigin.locationCode !== 'acesso_direto' && (
-                <span className="px-2 py-0.5 rounded-full bg-white/[0.08] text-[10px] font-medium text-zinc-400 shrink-0">
+                <span
+                  className={cn(
+                    'px-2 py-0.5 rounded-full text-[10px] font-medium shrink-0',
+                    isLight
+                      ? 'bg-black/[0.06] text-stone-600'
+                      : 'bg-white/[0.08] text-zinc-400'
+                  )}
+                >
                   {sessionOrigin.locationLabel.split('•')[0]?.trim()}
                 </span>
               )}
             </div>
           </div>
 
-          {/* Right Action: Saved Favorites / Order Pill */}
-          <button
-            type="button"
-            onClick={() => setIsDrawerOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.12] hover:bg-white/[0.18] backdrop-blur-md border border-white/10 text-xs font-medium text-white transition-all active:scale-95 shrink-0"
-            aria-label="Abrir meus favoritos e pedido"
-          >
-            <Heart
+          {/* Right Actions: Theme Mode Toggle + Saved Favorites Pill */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              title={isLight ? 'Mudar para Modo Escuro' : 'Mudar para Modo Claro'}
+              aria-label={isLight ? 'Mudar para Modo Escuro' : 'Mudar para Modo Claro'}
               className={cn(
-                'w-3.5 h-3.5 transition-colors',
-                savedCount > 0 ? 'fill-white text-white' : 'text-white/80'
+                'h-8 w-8 rounded-full flex items-center justify-center border transition-all active:scale-95',
+                isLight
+                  ? 'bg-black/[0.06] hover:bg-black/[0.11] border-black/10 text-[#141413]'
+                  : 'bg-white/[0.10] hover:bg-white/[0.16] border-white/10 text-white'
               )}
-            />
-            <span>{savedCount > 0 ? savedCount : 'Salvos'}</span>
-          </button>
+            >
+              {isLight ? (
+                <Moon className="w-3.5 h-3.5" />
+              ) : (
+                <Sun className="w-3.5 h-3.5 text-amber-300" />
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsDrawerOpen(true)}
+              className={cn(
+                'flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-md border text-xs font-medium transition-all active:scale-95',
+                isLight
+                  ? 'bg-black/[0.07] hover:bg-black/[0.12] border-black/10 text-[#141413]'
+                  : 'bg-white/[0.12] hover:bg-white/[0.18] border-white/10 text-white'
+              )}
+              aria-label="Abrir meus favoritos e pedido"
+            >
+              <Heart
+                className={cn(
+                  'w-3.5 h-3.5 transition-colors',
+                  savedCount > 0
+                    ? isLight
+                      ? 'fill-[#141413] text-[#141413]'
+                      : 'fill-white text-white'
+                    : isLight
+                      ? 'text-[#141413]/75'
+                      : 'text-white/80'
+                )}
+              />
+              <span>{savedCount > 0 ? savedCount : 'Salvos'}</span>
+            </button>
+          </div>
         </div>
 
         {/* Horizontal Category Pills Bar */}
@@ -111,8 +169,12 @@ export function SocialMenuHeader({
                   className={cn(
                     'px-4 py-1.5 rounded-full text-xs transition-all duration-300 ease-out shrink-0 select-none',
                     isActive
-                      ? 'bg-[#FFFFFF] text-[#0F0F0F] font-semibold shadow-sm scale-[1.02]'
-                      : 'bg-white/[0.12] text-white/90 font-medium backdrop-blur-md hover:bg-white/[0.18]'
+                      ? isLight
+                        ? 'bg-[#141413] text-[#FFFFFF] font-semibold shadow-sm scale-[1.02]'
+                        : 'bg-[#FFFFFF] text-[#0F0F0F] font-semibold shadow-sm scale-[1.02]'
+                      : isLight
+                        ? 'bg-black/[0.06] text-[#141413]/85 font-medium hover:bg-black/[0.11]'
+                        : 'bg-white/[0.12] text-white/90 font-medium backdrop-blur-md hover:bg-white/[0.18]'
                   )}
                 >
                   {cat.name}
