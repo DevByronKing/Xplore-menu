@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
 import {
+  Box,
   Check,
   Edit3,
   FolderPlus,
@@ -9,6 +11,7 @@ import {
   Loader2,
   Plus,
   RotateCcw,
+  Ruler,
   Search,
   Smartphone,
   Sparkles,
@@ -18,8 +21,17 @@ import {
   X,
 } from 'lucide-react';
 import type { Category, MenuItem, MenuMediaItem } from '@/types/database';
-import { uploadMediaFromGallery } from '@/lib/supabase/storageUpload';
+import {
+  upload3DModelToStorage,
+  uploadMediaFromGallery,
+} from '@/lib/supabase/storageUpload';
 import { cn, formatCurrencyBRL, generateUUID } from '@/lib/utils';
+
+const DishARViewer = dynamic(
+  () =>
+    import('@/components/menu/DishARViewer').then((mod) => mod.DishARViewer),
+  { ssr: false }
+);
 
 interface MenuManagementViewProps {
   restaurantId: string;
@@ -80,6 +92,18 @@ export function MenuManagementView({
   const [formIsAvailable, setFormIsAvailable] = useState(true);
   const [formIsFeatured, setFormIsFeatured] = useState(true);
 
+  // Estados de Realidade Aumentada 3D (WebAR 1:1)
+  const [formModelGlbUrl, setFormModelGlbUrl] = useState<string>('');
+  const [formModelUsdzUrl, setFormModelUsdzUrl] = useState<string>('');
+  const [formArScaleFixed, setFormArScaleFixed] = useState<boolean>(true);
+  const [formDimWidth, setFormDimWidth] = useState<string>('24');
+  const [formDimDepth, setFormDimDepth] = useState<string>('18');
+  const [formDimHeight, setFormDimHeight] = useState<string>('9');
+  const [isUploading3D, setIsUploading3D] = useState<boolean>(false);
+  const [model3DStatusMsg, setModel3DStatusMsg] = useState<string | null>(null);
+  const glbFileInputRef = useRef<HTMLInputElement | null>(null);
+  const usdzFileInputRef = useRef<HTMLInputElement | null>(null);
+
   // Estados de Upload Direto da Galeria do Celular (Supabase Storage / API local)
   const [isUploadingMedia, setIsUploadingMedia] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
@@ -105,6 +129,13 @@ export function MenuManagementView({
     setFormPosterUrl(primaryMedia?.poster || primaryMedia?.url || '');
     setFormIsAvailable(item.is_available);
     setFormIsFeatured(Boolean(item.is_featured));
+    setFormModelGlbUrl(item.model_glb_url || '');
+    setFormModelUsdzUrl(item.model_usdz_url || '');
+    setFormArScaleFixed(item.ar_scale_fixed ?? true);
+    setFormDimWidth(String(item.dimensions_cm?.width ?? 24));
+    setFormDimDepth(String(item.dimensions_cm?.depth ?? 18));
+    setFormDimHeight(String(item.dimensions_cm?.height ?? 9));
+    setModel3DStatusMsg(null);
     setUploadedFileName(null);
     setUploadStatusMsg(null);
     setIsModalOpen(true);
@@ -135,6 +166,13 @@ export function MenuManagementView({
     );
     setFormIsAvailable(true);
     setFormIsFeatured(true);
+    setFormModelGlbUrl('/models/focaccia-burrata.glb');
+    setFormModelUsdzUrl('');
+    setFormArScaleFixed(true);
+    setFormDimWidth('24');
+    setFormDimDepth('18');
+    setFormDimHeight('9');
+    setModel3DStatusMsg(null);
     setUploadedFileName(null);
     setUploadStatusMsg(null);
     setIsModalOpen(true);
@@ -203,6 +241,38 @@ export function MenuManagementView({
       setIsUploadingMedia(false);
       if (galleryPosterInputRef.current) {
         galleryPosterInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handle3DFileSelect = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+    format: 'glb' | 'usdz'
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading3D(true);
+    setModel3DStatusMsg(`Enviando modelo 3D (.${format}) para models-3d...`);
+    try {
+      const publicUrl = await upload3DModelToStorage(file, format);
+      if (format === 'glb') {
+        setFormModelGlbUrl(publicUrl);
+      } else {
+        setFormModelUsdzUrl(publicUrl);
+      }
+      setModel3DStatusMsg(
+        `Modelo 3D (.${format}) salvo e pronto para projeção 1:1 na mesa!`
+      );
+    } catch {
+      setModel3DStatusMsg(`Erro ao enviar arquivo .${format}.`);
+    } finally {
+      setIsUploading3D(false);
+      if (format === 'glb' && glbFileInputRef.current) {
+        glbFileInputRef.current.value = '';
+      }
+      if (format === 'usdz' && usdzFileInputRef.current) {
+        usdzFileInputRef.current.value = '';
       }
     }
   };
@@ -283,6 +353,16 @@ export function MenuManagementView({
       is_featured: formIsFeatured,
       sort_order: editingItem ? editingItem.sort_order : items.length + 1,
       likes_initial_count: editingItem?.likes_initial_count ?? 85,
+      model_glb_url: formModelGlbUrl.trim() || null,
+      model_usdz_url: formModelUsdzUrl.trim() || null,
+      ar_scale_fixed: formArScaleFixed,
+      dimensions_cm: formModelGlbUrl.trim()
+        ? {
+            width: Number(formDimWidth) || 24,
+            depth: Number(formDimDepth) || 18,
+            height: Number(formDimHeight) || 9,
+          }
+        : null,
     };
 
     if (editingItem) {
@@ -492,6 +572,12 @@ export function MenuManagementView({
                     </>
                   )}
                 </span>
+                {item.model_glb_url && (
+                  <span className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded bg-blue-600/90 text-[9px] font-bold text-white flex items-center gap-1 shadow">
+                    <Box className="w-2.5 h-2.5" />
+                    <span>3D / AR 1:1</span>
+                  </span>
+                )}
               </div>
 
               <div className="flex-1 min-w-0 flex flex-col justify-between">
@@ -842,6 +928,209 @@ export function MenuManagementView({
                     className="w-full px-3 py-2 rounded-xl bg-[#0F0F0F] border border-white/10 text-white"
                   />
                 </div>
+              </div>
+
+              {/* MÓDULO WEBAR 3D ("VER NA SUA MESA" ESCALA REAL 1:1) */}
+              <div className="p-4 rounded-2xl bg-[#0F0F0F] border border-blue-500/30 space-y-3.5">
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <Box className="w-4 h-4 text-blue-400" />
+                      Modelo 3D & Realidade Aumentada (&ldquo;Ver na sua mesa&rdquo;)
+                    </span>
+                    <p className="text-[11px] text-[#A1A1AA] mt-0.5">
+                      Envie o arquivo 3D (.glb / .usdz) ou escolha um modelo 1:1 pronto para projetar o prato na mesa.
+                    </p>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full bg-blue-500/20 border border-blue-500/40 text-[10px] font-bold text-blue-300 shrink-0">
+                    Escala 1:1
+                  </span>
+                </div>
+
+                {/* Inputs ocultos para upload .glb e .usdz */}
+                <input
+                  ref={glbFileInputRef}
+                  type="file"
+                  accept=".glb,model/gltf-binary"
+                  onChange={(e) => handle3DFileSelect(e, 'glb')}
+                  className="hidden"
+                />
+                <input
+                  ref={usdzFileInputRef}
+                  type="file"
+                  accept=".usdz,model/vnd.usdz+zip"
+                  onChange={(e) => handle3DFileSelect(e, 'usdz')}
+                  className="hidden"
+                />
+
+                {/* Botões de Upload .GLB e .USDZ + Seletor Rápido */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <button
+                    type="button"
+                    disabled={isUploading3D}
+                    onClick={() => glbFileInputRef.current?.click()}
+                    className="py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-[11px] flex items-center justify-center gap-1.5 transition-all disabled:opacity-60"
+                  >
+                    {isUploading3D ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <UploadCloud className="w-3.5 h-3.5" />
+                    )}
+                    <span>Enviar Modelo .GLB (Android / Web 3D)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={isUploading3D}
+                    onClick={() => usdzFileInputRef.current?.click()}
+                    className="py-2.5 px-3 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] border border-white/15 text-white font-semibold text-[11px] flex items-center justify-center gap-1.5 transition-all disabled:opacity-60"
+                  >
+                    <UploadCloud className="w-3.5 h-3.5 text-sky-400" />
+                    <span>Enviar .USDZ (iPhone AR Quick Look)</span>
+                  </button>
+                </div>
+
+                {/* Modelos 3D Gastronômicos Pré-Calibrados em 1:1 */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-zinc-400">
+                    Ou selecione um Modelo 3D 1:1 da biblioteca ou cole o link (.glb):
+                  </label>
+                  <div className="flex flex-wrap gap-1.5 pb-1">
+                    {[
+                      {
+                        label: 'Focaccia Burrata (24×18cm)',
+                        url: '/models/focaccia-burrata.glb',
+                        w: '24',
+                        d: '18',
+                        h: '9',
+                      },
+                      {
+                        label: 'Focaccia Figo & Parma (26×20cm)',
+                        url: '/models/focaccia-figo.glb',
+                        w: '26',
+                        d: '20',
+                        h: '8',
+                      },
+                      {
+                        label: 'Brioche French Toast (22×22cm)',
+                        url: '/models/french-toast.glb',
+                        w: '22',
+                        d: '22',
+                        h: '11',
+                      },
+                      {
+                        label: 'Pistachio Latte (14×14cm)',
+                        url: '/models/pistachio-latte.glb',
+                        w: '14',
+                        d: '14',
+                        h: '12',
+                      },
+                      {
+                        label: 'Sem Modelo 3D',
+                        url: '',
+                        w: '24',
+                        d: '18',
+                        h: '9',
+                      },
+                    ].map((preset) => (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        onClick={() => {
+                          setFormModelGlbUrl(preset.url);
+                          setFormDimWidth(preset.w);
+                          setFormDimDepth(preset.d);
+                          setFormDimHeight(preset.h);
+                        }}
+                        className={cn(
+                          'px-2.5 py-1 rounded-full text-[10px] font-semibold border transition-all',
+                          formModelGlbUrl === preset.url
+                            ? 'bg-blue-600 text-white border-blue-400'
+                            : 'bg-[#161616] text-zinc-300 border-white/10 hover:border-white/30'
+                        )}
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
+                  <input
+                    type="text"
+                    value={formModelGlbUrl}
+                    onChange={(e) => setFormModelGlbUrl(e.target.value)}
+                    placeholder="Caminho ou URL do arquivo .glb (ex: /models/focaccia-burrata.glb)"
+                    className="w-full px-3 py-2 rounded-xl bg-[#161616] border border-white/10 text-white text-[11px]"
+                  />
+                </div>
+
+                {/* Dimensões Físicas Reais em Centímetros (Escala 1:1) */}
+                {formModelGlbUrl && (
+                  <>
+                    <div className="grid grid-cols-3 gap-2.5 pt-1">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-semibold text-zinc-400 flex items-center gap-1">
+                          <Ruler className="w-3 h-3 text-blue-400" />
+                          Largura (cm)
+                        </label>
+                        <input
+                          type="number"
+                          value={formDimWidth}
+                          onChange={(e) => setFormDimWidth(e.target.value)}
+                          className="w-full px-2.5 py-1.5 rounded-xl bg-[#161616] border border-white/10 text-white"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-semibold text-zinc-400">
+                          Profundidade (cm)
+                        </label>
+                        <input
+                          type="number"
+                          value={formDimDepth}
+                          onChange={(e) => setFormDimDepth(e.target.value)}
+                          className="w-full px-2.5 py-1.5 rounded-xl bg-[#161616] border border-white/10 text-white"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-semibold text-zinc-400">
+                          Altura (cm)
+                        </label>
+                        <input
+                          type="number"
+                          value={formDimHeight}
+                          onChange={(e) => setFormDimHeight(e.target.value)}
+                          className="w-full px-2.5 py-1.5 rounded-xl bg-[#161616] border border-white/10 text-white"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Pré-visualização 3D Interativa Instantânea no Modal */}
+                    <div className="pt-1">
+                      <span className="block text-[10px] font-semibold text-blue-300 mb-1.5">
+                        Prévia 3D Interativa em Escala Real (Gire com o mouse ou dedo):
+                      </span>
+                      <DishARViewer
+                        modelGlbUrl={formModelGlbUrl}
+                        modelUsdzUrl={formModelUsdzUrl || null}
+                        posterUrl={formPosterUrl}
+                        itemName={formName || 'Prévia 3D do Prato'}
+                        arScaleFixed={formArScaleFixed}
+                        dimensionsCm={{
+                          width: Number(formDimWidth) || 24,
+                          depth: Number(formDimDepth) || 18,
+                          height: Number(formDimHeight) || 9,
+                        }}
+                        showBuiltInButton={false}
+                        className="w-full"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {model3DStatusMsg && (
+                  <div className="px-3 py-2 rounded-xl bg-blue-500/15 border border-blue-500/30 text-blue-200 text-[11px] flex items-center gap-1.5">
+                    <Check className="w-3.5 h-3.5 shrink-0 text-blue-400" />
+                    <span>{model3DStatusMsg}</span>
+                  </div>
+                )}
               </div>
 
               <div className="pt-3 border-t border-white/10 flex items-center justify-end gap-2.5">

@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ChevronDown, Heart, X } from 'lucide-react';
+import { Box, Camera, ChevronDown, Heart, X } from 'lucide-react';
 import type { MenuItem } from '@/types/database';
 import { useMenuSession } from '@/context/MenuSessionContext';
 import { useTheme } from '@/context/ThemeContext';
 import { useItemDwellObserver } from '@/hooks/useItemDwellObserver';
+import { ProductARModal } from '@/components/menu/ProductARModal';
 import { cn, formatCurrencyBRL } from '@/lib/utils';
 
 interface SocialProductCardProps {
@@ -32,6 +33,7 @@ export function SocialProductCard({
   const [showDoubleTapHeart, setShowDoubleTapHeart] = useState(false);
   const [videoError, setVideoError] = useState(false);
   const [videoProgressPct, setVideoProgressPct] = useState(0);
+  const [isArModalOpen, setIsArModalOpen] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const lastTapRef = useRef<number>(0);
@@ -274,15 +276,29 @@ export function SocialProductCard({
           </div>
         )}
 
-        {/* Top-Left Floating Badge (MAIS PEDIDO / NOVIDADE / SUGESTÃO DO CHEF) */}
-        <div className="flex items-center justify-between">
-          {primaryBadge ? (
-            <span className="bg-black/70 text-white text-[10px] font-medium uppercase tracking-wider px-3 py-1 rounded-full backdrop-blur-md">
-              {primaryBadge}
-            </span>
-          ) : (
-            <span />
-          )}
+        {/* Top-Left Floating Badge (MAIS PEDIDO / NOVIDADE / SUGESTÃO DO CHEF) + Selo 3D / AR */}
+        <div
+          className="flex items-center justify-between gap-2"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center gap-1.5">
+            {primaryBadge && (
+              <span className="bg-black/70 text-white text-[10px] font-medium uppercase tracking-wider px-3 py-1 rounded-full backdrop-blur-md">
+                {primaryBadge}
+              </span>
+            )}
+
+            {item.model_glb_url && (
+              <button
+                type="button"
+                onClick={() => setIsArModalOpen(true)}
+                className="bg-blue-600/90 hover:bg-blue-500 text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full backdrop-blur-md flex items-center gap-1 shadow-md transition-all active:scale-95"
+              >
+                <Box className="w-3 h-3" />
+                <span>3D / AR</span>
+              </button>
+            )}
+          </div>
 
           {!item.is_available && (
             <span className="bg-rose-950/85 text-rose-200 border border-rose-500/30 text-[10px] font-semibold uppercase tracking-wider px-3 py-1 rounded-full backdrop-blur-md">
@@ -352,10 +368,10 @@ export function SocialProductCard({
           {item.description}
         </p>
 
-        {/* Line 3 (Base): Price on left + ALERGÊNICOS v in center-left + Circular Favorite button on right */}
-        <div className="mt-4 pt-1 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-5">
-            <span className="text-base font-medium text-white tracking-tight">
+        {/* Line 3 (Base): Price on left + ALERGÊNICOS v + Botão "Ver na sua mesa" + Circular Favorite button */}
+        <div className="mt-4 pt-1 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <span className="text-base font-medium text-white tracking-tight shrink-0">
               {formatCurrencyBRL(item.price_cents)}
             </span>
 
@@ -363,7 +379,7 @@ export function SocialProductCard({
               type="button"
               onClick={handleToggleAllergens}
               aria-expanded={isAllergensExpanded}
-              className="text-[11px] uppercase tracking-widest text-zinc-300 hover:text-white flex items-center gap-1 transition-colors py-1"
+              className="text-[11px] uppercase tracking-widest text-zinc-300 hover:text-white flex items-center gap-1 transition-colors py-1 shrink-0"
             >
               <span>Alergênicos</span>
               <ChevronDown
@@ -375,30 +391,56 @@ export function SocialProductCard({
             </button>
           </div>
 
-          {/* Right Circular Favorite / Add Button */}
-          <button
-            type="button"
-            disabled={!item.is_available}
-            onClick={handleToggleFavoriteAction}
-            aria-label={
-              isSaved ? 'Remover dos favoritos' : 'Adicionar aos favoritos'
-            }
-            className={cn(
-              'w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 shrink-0',
-              isSaved
-                ? 'bg-white text-[#0F0F0F] border border-white shadow-md animate-heart-pop'
-                : 'bg-white/[0.14] border border-white/20 text-white backdrop-blur-md hover:bg-white/[0.22]'
+          <div className="flex items-center gap-2 shrink-0">
+            {item.model_glb_url && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsArModalOpen(true);
+                }}
+                className="px-3 py-2 rounded-full bg-blue-600/90 hover:bg-blue-500 text-white text-[11px] font-semibold flex items-center gap-1.5 shadow-lg shadow-blue-600/30 backdrop-blur-md transition-all active:scale-95"
+              >
+                <Box className="w-3.5 h-3.5" />
+                <span>Ver na sua mesa</span>
+                <Camera className="w-3 h-3 opacity-80" />
+              </button>
             )}
-          >
-            <Heart
+
+            {/* Right Circular Favorite / Add Button */}
+            <button
+              type="button"
+              disabled={!item.is_available}
+              onClick={handleToggleFavoriteAction}
+              aria-label={
+                isSaved ? 'Remover dos favoritos' : 'Adicionar aos favoritos'
+              }
               className={cn(
-                'w-4 h-4 transition-colors',
-                isSaved ? 'fill-[#0F0F0F] text-[#0F0F0F]' : 'text-white'
+                'w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 shrink-0',
+                isSaved
+                  ? 'bg-white text-[#0F0F0F] border border-white shadow-md animate-heart-pop'
+                  : 'bg-white/[0.14] border border-white/20 text-white backdrop-blur-md hover:bg-white/[0.22]'
               )}
-            />
-          </button>
+            >
+              <Heart
+                className={cn(
+                  'w-4 h-4 transition-colors',
+                  isSaved ? 'fill-[#0F0F0F] text-[#0F0F0F]' : 'text-white'
+                )}
+              />
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Modal 3D / Realidade Aumentada 1:1 ("Ver na sua mesa") */}
+      {item.model_glb_url && (
+        <ProductARModal
+          item={item}
+          isOpen={isArModalOpen}
+          onClose={() => setIsArModalOpen(false)}
+        />
+      )}
     </article>
   );
 }

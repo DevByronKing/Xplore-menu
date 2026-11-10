@@ -5,9 +5,9 @@ import {
   DEMO_TOUCHPOINTS,
 } from '@/data/mockMenuData';
 
-const CATALOG_ITEMS_KEY = 'xplore_catalog_items_v5';
-const CATALOG_CATEGORIES_KEY = 'xplore_catalog_categories_v5';
-const CATALOG_TOUCHPOINTS_KEY = 'xplore_catalog_touchpoints_v5';
+const CATALOG_ITEMS_KEY = 'xplore_catalog_items_v6';
+const CATALOG_CATEGORIES_KEY = 'xplore_catalog_categories_v6';
+const CATALOG_TOUCHPOINTS_KEY = 'xplore_catalog_touchpoints_v6';
 export const CATALOG_UPDATED_EVENT = 'xplore:catalog-updated';
 
 function notifyCatalogUpdated(): void {

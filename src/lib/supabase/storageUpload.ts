@@ -2,6 +2,7 @@ import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase/client';
 import { generateUUID } from '@/lib/utils';
 
 export const SUPABASE_MEDIA_BUCKET = 'menu-media';
+export const SUPABASE_MODELS_3D_BUCKET = 'models-3d';
 
 /**
  * Automatically captures a JPEG poster frame from a video File selected from the phone's gallery
@@ -138,4 +139,52 @@ export async function uploadMediaFromGallery(
     mediaType,
     posterUrl: extractedPoster || undefined,
   };
+}
+
+/**
+ * Uploads a 3D model (.glb or .usdz) to the `models-3d` Supabase Storage bucket
+ * or falls back to `/api/upload` / client ObjectURL.
+ */
+export async function upload3DModelToStorage(
+  file: File,
+  format: 'glb' | 'usdz'
+): Promise<string> {
+  const mimeType =
+    format === 'glb' ? 'model/gltf-binary' : 'model/vnd.usdz+zip';
+
+  const supabase = getSupabaseClient();
+  if (isSupabaseConfigured && supabase) {
+    const storagePath = `dishes-3d/${Date.now()}-${generateUUID().slice(0, 8)}.${format}`;
+    const { error } = await supabase.storage
+      .from(SUPABASE_MODELS_3D_BUCKET)
+      .upload(storagePath, file, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: mimeType,
+      });
+
+    if (!error) {
+      const { data } = supabase.storage
+        .from(SUPABASE_MODELS_3D_BUCKET)
+        .getPublicUrl(storagePath);
+      return data.publicUrl;
+    }
+  }
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await fetch('/api/upload', {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (response.ok) {
+    const result = (await response.json()) as { url?: string };
+    if (result.url) {
+      return result.url;
+    }
+  }
+
+  return URL.createObjectURL(file);
 }

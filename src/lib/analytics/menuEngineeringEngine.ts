@@ -16,18 +16,21 @@ interface BaselineItemSeed {
   additions: number;
   removals: number;
   hesitations: number;
+  rotations3d: number;
+  arTableViews: number;
+  arHesitations: number;
 }
 
 /**
  * Curated 7-day baseline telemetry for NÓMADE Fornaria & Café so the
  * Dashboard exhibits realistic behavioral patterns across all 4 quadrants
- * ("Estrelas", "Enigmas / Quase Pediu", "Invisíveis", "Cavalos de Batalha"),
- * while merging live browser telemetry in real time.
+ * ("Estrelas", "Enigmas / Quase Pediu", "Invisíveis", "Cavalos de Batalha")
+ * plus WebAR 3D table projection telemetry, while merging live browser telemetry in real time.
  */
 const BASELINE_SEEDS: Record<string, BaselineItemSeed> = {
   'item-focaccia-burrata-pistache': {
     uniqueViewers: 410,
-    totalDwellMs: 410 * 6420, // 6.4s avg dwell (Video autoplay star)
+    totalDwellMs: 410 * 6420,
     dwellSamples: 410,
     likes: 164,
     allergenExpands: 48,
@@ -35,10 +38,13 @@ const BASELINE_SEEDS: Record<string, BaselineItemSeed> = {
     additions: 142,
     removals: 14,
     hesitations: 16,
+    rotations3d: 184,
+    arTableViews: 112,
+    arHesitations: 9,
   },
   'item-focaccia-stracciatella-figo': {
     uniqueViewers: 365,
-    totalDwellMs: 365 * 5850, // 5.85s avg dwell (High attention, high price hesitation -> Enigma!)
+    totalDwellMs: 365 * 5850,
     dwellSamples: 365,
     likes: 118,
     allergenExpands: 74,
@@ -46,10 +52,13 @@ const BASELINE_SEEDS: Record<string, BaselineItemSeed> = {
     additions: 88,
     removals: 41,
     hesitations: 54,
+    rotations3d: 146,
+    arTableViews: 94,
+    arHesitations: 32,
   },
   'item-shakshuka-tartine-trufada': {
     uniqueViewers: 330,
-    totalDwellMs: 330 * 5120, // 5.1s avg dwell (Star)
+    totalDwellMs: 330 * 5120,
     dwellSamples: 330,
     likes: 129,
     allergenExpands: 62,
@@ -57,10 +66,13 @@ const BASELINE_SEEDS: Record<string, BaselineItemSeed> = {
     additions: 104,
     removals: 12,
     hesitations: 15,
+    rotations3d: 0,
+    arTableViews: 0,
+    arHesitations: 0,
   },
   'item-french-toast-brioche': {
     uniqueViewers: 290,
-    totalDwellMs: 290 * 4380, // 4.38s avg dwell (Enigma: calorie/sweetness hesitation)
+    totalDwellMs: 290 * 4380,
     dwellSamples: 290,
     likes: 96,
     allergenExpands: 83,
@@ -68,10 +80,13 @@ const BASELINE_SEEDS: Record<string, BaselineItemSeed> = {
     additions: 64,
     removals: 29,
     hesitations: 38,
+    rotations3d: 122,
+    arTableViews: 78,
+    arHesitations: 24,
   },
   'item-pistachio-cream-latte': {
     uniqueViewers: 455,
-    totalDwellMs: 455 * 4950, // 4.95s avg dwell (Top Star beverage)
+    totalDwellMs: 455 * 4950,
     dwellSamples: 455,
     likes: 210,
     allergenExpands: 91,
@@ -79,10 +94,13 @@ const BASELINE_SEEDS: Record<string, BaselineItemSeed> = {
     additions: 186,
     removals: 11,
     hesitations: 14,
+    rotations3d: 219,
+    arTableViews: 138,
+    arHesitations: 8,
   },
   'item-v60-microlote-geisha': {
     uniqueViewers: 240,
-    totalDwellMs: 240 * 1180, // 1.18s avg dwell (< 1.5s fast scroll -> Invisible!)
+    totalDwellMs: 240 * 1180,
     dwellSamples: 240,
     likes: 19,
     allergenExpands: 8,
@@ -90,10 +108,13 @@ const BASELINE_SEEDS: Record<string, BaselineItemSeed> = {
     additions: 16,
     removals: 4,
     hesitations: 6,
+    rotations3d: 0,
+    arTableViews: 0,
+    arHesitations: 0,
   },
   'item-espresso-tonic-yuzu': {
     uniqueViewers: 315,
-    totalDwellMs: 315 * 2850, // 2.85s avg dwell (Workhorse / solid conversion)
+    totalDwellMs: 315 * 2850,
     dwellSamples: 315,
     likes: 88,
     allergenExpands: 19,
@@ -101,10 +122,13 @@ const BASELINE_SEEDS: Record<string, BaselineItemSeed> = {
     additions: 78,
     removals: 9,
     hesitations: 11,
+    rotations3d: 0,
+    arTableViews: 0,
+    arHesitations: 0,
   },
   'item-matcha-strawberry-cloud': {
     uniqueViewers: 280,
-    totalDwellMs: 280 * 1320, // 1.32s avg dwell (< 1.5s static image -> Invisible!)
+    totalDwellMs: 280 * 1320,
     dwellSamples: 280,
     likes: 34,
     allergenExpands: 27,
@@ -112,6 +136,9 @@ const BASELINE_SEEDS: Record<string, BaselineItemSeed> = {
     additions: 22,
     removals: 8,
     hesitations: 12,
+    rotations3d: 0,
+    arTableViews: 0,
+    arHesitations: 0,
   },
 };
 
@@ -150,6 +177,9 @@ export function computeMenuEngineeringAnalytics(
       additions: number;
       removals: number;
       hesitations: number;
+      rotations3d: number;
+      arTableViews: number;
+      arHesitations: number;
       sessions: Set<string>;
     }
   >();
@@ -171,6 +201,9 @@ export function computeMenuEngineeringAnalytics(
         additions: 0,
         removals: 0,
         hesitations: 0,
+        rotations3d: 0,
+        arTableViews: 0,
+        arHesitations: 0,
         sessions: new Set(),
       };
       liveByItem.set(ev.menu_item_id, bucket);
@@ -204,6 +237,15 @@ export function computeMenuEngineeringAnalytics(
       case 'cart_hesitation':
         bucket.hesitations += 1;
         break;
+      case '3d_rotate':
+        bucket.rotations3d += 1;
+        break;
+      case 'ar_table_view':
+        bucket.arTableViews += 1;
+        break;
+      case 'ar_hesitation':
+        bucket.arHesitations += 1;
+        break;
       default:
         break;
     }
@@ -214,6 +256,7 @@ export function computeMenuEngineeringAnalytics(
   let totalHesitationEvents = 0;
 
   const itemAnalytics: ExtendedItemAnalytics[] = items.map((item) => {
+    const has3DModel = Boolean(item.model_glb_url);
     const seed: BaselineItemSeed = BASELINE_SEEDS[item.id] ?? {
       uniqueViewers: 120,
       totalDwellMs: 120 * 2400,
@@ -224,6 +267,9 @@ export function computeMenuEngineeringAnalytics(
       additions: 24,
       removals: 5,
       hesitations: 6,
+      rotations3d: has3DModel ? 45 : 0,
+      arTableViews: has3DModel ? 28 : 0,
+      arHesitations: has3DModel ? 4 : 0,
     };
 
     const live = liveByItem.get(item.id);
@@ -242,8 +288,31 @@ export function computeMenuEngineeringAnalytics(
     const removalsCount = seed.removals + (live ? live.removals : 0);
     const rawHesitations = seed.hesitations + (live ? live.hesitations : 0);
 
+    const rotations3dCount = seed.rotations3d + (live ? live.rotations3d : 0);
+    const arTableViewsCount =
+      seed.arTableViews + (live ? live.arTableViews : 0);
+    const arHesitationsCount =
+      seed.arHesitations + (live ? live.arHesitations : 0);
+
+    const arConvertedOrders = Math.max(
+      0,
+      arTableViewsCount - arHesitationsCount
+    );
+    const arConversionPercent =
+      arTableViewsCount > 0
+        ? Math.min(
+            98,
+            Math.round((arConvertedOrders / arTableViewsCount) * 100)
+          )
+        : 0;
+
     const totalInteractions =
-      likesCount + allergenExpandsCount + mediaSwipesCount + additionsCount;
+      likesCount +
+      allergenExpandsCount +
+      mediaSwipesCount +
+      additionsCount +
+      rotations3dCount +
+      arTableViewsCount;
     const interactionRatePercent = Math.min(
       98,
       Math.round((totalInteractions / Math.max(1, uniqueViewers * 1.4)) * 100)
@@ -259,12 +328,13 @@ export function computeMenuEngineeringAnalytics(
         ? Math.min(100, Math.round((removalsCount / additionsCount) * 100))
         : 0;
 
-    // Hesitation score (0 - 100) combining bag removals, allergen checks & repeated views
+    // Hesitation score (0 - 100) combining bag removals, AR hesitation, allergen checks & repeated views
     const hesitationScore = Math.min(
       100,
       Math.round(
         abandonmentRatePercent * 1.15 +
-          (rawHesitations / Math.max(1, uniqueViewers)) * 180
+          ((rawHesitations + arHesitationsCount) / Math.max(1, uniqueViewers)) *
+            180
       )
     );
 
@@ -282,7 +352,7 @@ export function computeMenuEngineeringAnalytics(
       )}s). O cliente passa pelo card sem parar na primeira dobra.`;
       recommendedAction = hasVideo
         ? 'Trocar os primeiros 2 segundos do vídeo por close-up de movimento (corte ou calda).'
-        : 'Substituir foto estática por vídeo vertical de 5s em autoplay (ex: extração na mesa).';
+        : 'Substituir foto estática por vídeo vertical em autoplay e ativar modelo 3D/AR.';
     } else if (
       avgDwellTimeMs >= 3500 &&
       (abandonmentRatePercent >= 28 || hesitationScore >= 52)
@@ -290,7 +360,11 @@ export function computeMenuEngineeringAnalytics(
       quadrant = 'enigma';
       diagnosticNote = `Retenção alta (${(avgDwellTimeMs / 1000).toFixed(
         1
-      )}s), mas ${abandonmentRatePercent}% removem da sacola e ${allergenExpandsCount} abriram alergênicos.`;
+      )}s), mas ${abandonmentRatePercent}% removem da sacola${
+        arHesitationsCount > 0
+          ? ` e ${arHesitationsCount} desistiram após projetar na mesa em AR`
+          : ''
+      }.`;
       recommendedAction =
         'Destacar "Serve 2 pessoas" na descrição ou criar opção meia-porção para reduzir atrito de ticket.';
     } else if (avgDwellTimeMs >= 3500 && conversionRatePercent >= 18) {
@@ -299,7 +373,7 @@ export function computeMenuEngineeringAnalytics(
         1
       )}s) e ${conversionRatePercent}% de conversão líquida para pedido.`;
       recommendedAction =
-        'Manter no topo de "Destaques" e usar como âncora de combo com bebidas de alta margem.';
+        'Manter no topo de "Destaques" e impulsionar no Google Ads Local / Instagram.';
     } else {
       quadrant = 'workhorse';
       diagnosticNote = `Decisão rápida (${(avgDwellTimeMs / 1000).toFixed(
@@ -311,7 +385,8 @@ export function computeMenuEngineeringAnalytics(
 
     totalDwellSum += avgDwellTimeMs;
     totalInteractionSum += interactionRatePercent;
-    totalHesitationEvents += rawHesitations + removalsCount;
+    totalHesitationEvents +=
+      rawHesitations + removalsCount + arHesitationsCount;
 
     return {
       menuItemId: item.id,
@@ -335,6 +410,11 @@ export function computeMenuEngineeringAnalytics(
       mediaSwipesCount,
       netOrdersCount,
       recommendedAction,
+      has3DModel,
+      rotations3dCount,
+      arTableViewsCount,
+      arHesitationsCount,
+      arConversionPercent,
     };
   });
 

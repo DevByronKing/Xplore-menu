@@ -9,6 +9,12 @@ export interface MenuMediaItem {
   aspectRatio?: '9:16' | '4:5' | '1:1';
 }
 
+export interface ProductPhysicalDimensionsCm {
+  width: number;
+  height: number;
+  depth: number;
+}
+
 export interface RestaurantThemeConfig {
   primaryColor: string;
   accentColor: string;
@@ -30,6 +36,7 @@ export interface Restaurant {
   address?: string;
   opening_hours?: string;
   instagram_handle?: string;
+  google_review_url?: string;
   wifi_ssid?: string;
   whatsapp_phone?: string;
   logo_url: string;
@@ -75,6 +82,11 @@ export interface MenuItem {
   is_featured?: boolean;
   sort_order: number;
   likes_initial_count?: number;
+  // Módulo WebAR ("Ver na sua mesa") & 3D 1:1
+  model_glb_url?: string | null;
+  model_usdz_url?: string | null;
+  ar_scale_fixed?: boolean;
+  dimensions_cm?: ProductPhysicalDimensionsCm | null;
 }
 
 export type TouchpointSourceType = 'nfc' | 'qrcode' | 'link';
@@ -101,7 +113,12 @@ export type TelemetryEventType =
   | 'media_swipe'
   | 'video_replay'
   | 'cart_hesitation'
-  | 'session_context';
+  | 'session_context'
+  | '3d_rotate'
+  | 'ar_table_view'
+  | 'ar_hesitation'
+  | 'review_submitted'
+  | 'club_mission_completed';
 
 export interface TelemetryEventMetadata {
   source?: string;
@@ -114,7 +131,8 @@ export interface TelemetryEventMetadata {
   hesitation_reason?:
     | 'removed_from_selection'
     | 'repeated_views_no_action'
-    | 'session_exit_with_selection';
+    | 'session_exit_with_selection'
+    | 'ar_view_without_order';
   device_type?: 'mobile' | 'tablet' | 'desktop';
   connection_effective_type?: string;
   viewport_ratio?: number;
@@ -173,6 +191,12 @@ export interface ItemBehavioralAnalytics {
   hesitationScore: number;
   quadrant: MenuEngineeringQuadrant;
   diagnosticNote: string;
+  // Telemetria WebAR 3D
+  has3DModel: boolean;
+  rotations3dCount: number;
+  arTableViewsCount: number;
+  arHesitationsCount: number;
+  arConversionPercent: number;
 }
 
 export type OrderPaymentPreference =
@@ -200,8 +224,58 @@ export interface TableOrder {
   source: TouchpointSourceType;
   items: TableOrderItem[];
   totalCents: number;
+  discountCents?: number;
+  couponCode?: string;
   paymentPreference: OrderPaymentPreference;
   cashChangeFor?: string;
   status: TableOrderStatus;
+  createdAt: string;
+}
+
+// ============================================================================
+// MÓDULO DE AVALIAÇÃO + GOOGLE ADS + INSTAGRAM & CLUBE DE DESCONTOS (OPCIONAL)
+// ============================================================================
+export type ClubMissionId = 'google_review' | 'instagram_story' | 'vip_whatsapp';
+
+export interface GrowthClubConfig {
+  // Indica se o estabelecimento contratou/ativou o módulo adicional de Clube de Descontos
+  clubModuleEnabled: boolean;
+  reviewsModuleEnabled: boolean;
+  clubName: string;
+  googleReviewUrl: string;
+  instagramHandle: string;
+  googleAdsPixelTag: string;
+  metaPixelId: string;
+  missions: {
+    id: ClubMissionId;
+    title: string;
+    subtitle: string;
+    discountPercent: number;
+    couponCode: string;
+    rewardLabel: string;
+    enabled: boolean;
+  }[];
+}
+
+export interface CustomerReviewSubmission {
+  id: string;
+  tableLabel: string;
+  rating: number;
+  comment: string;
+  customerName?: string;
+  customerPhone?: string;
+  redirectedToGoogle: boolean;
+  sharedOnInstagram: boolean;
+  createdAt: string;
+}
+
+export interface ClubVipMemberLead {
+  id: string;
+  name: string;
+  whatsapp: string;
+  tableLabel: string;
+  completedMissionId: ClubMissionId;
+  unlockedCouponCode: string;
+  discountPercent: number;
   createdAt: string;
 }

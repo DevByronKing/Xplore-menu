@@ -6,6 +6,8 @@ import {
   BarChart3,
   BellRing,
   ExternalLink,
+  FileText,
+  Gift,
   Moon,
   QrCode,
   RefreshCw,
@@ -46,9 +48,10 @@ import { BehavioralIntelligenceView } from '@/components/dashboard/BehavioralInt
 import { MenuManagementView } from '@/components/dashboard/MenuManagementView';
 import { NfcGeneratorView } from '@/components/dashboard/NfcGeneratorView';
 import { LiveOrdersView } from '@/components/dashboard/LiveOrdersView';
+import { GrowthAndClubView } from '@/components/dashboard/GrowthAndClubView';
 import { cn } from '@/lib/utils';
 
-type DashboardTab = 'orders' | 'intelligence' | 'catalog' | 'nfc';
+type DashboardTab = 'orders' | 'intelligence' | 'catalog' | 'growth' | 'nfc';
 
 export function DashboardClient() {
   const { isLight, toggleTheme } = useTheme();
@@ -241,7 +244,21 @@ export function DashboardClient() {
               )}
             >
               <UtensilsCrossed className="w-3.5 h-3.5" />
-              <span>Pratos & Preços ({items.length})</span>
+              <span>Pratos & 3D ({items.length})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('growth')}
+              className={cn(
+                'px-4 py-2 rounded-full text-xs font-semibold flex items-center gap-1.5 shrink-0 transition-all',
+                activeTab === 'growth'
+                  ? 'bg-white text-[#0F0F0F]'
+                  : 'text-zinc-400 hover:text-white'
+              )}
+            >
+              <Gift className="w-3.5 h-3.5 text-amber-400" />
+              <span>Google, Insta & Clube</span>
             </button>
 
             <button
@@ -261,6 +278,16 @@ export function DashboardClient() {
 
           {/* Botões à Direita */}
           <div className="hidden lg:flex items-center gap-2">
+            <a
+              href="/Apresentacao_Comercial_Xplore.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3 py-2 rounded-full bg-blue-600/20 hover:bg-blue-600/30 border border-blue-400/40 text-xs font-semibold text-blue-300 flex items-center gap-1.5"
+              title="Baixar PDF Completo de Apresentação Comercial & Pitch Multi-Setorial"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>PDF Comercial</span>
+            </a>
             <button
               type="button"
               onClick={toggleTheme}
@@ -335,6 +362,10 @@ export function DashboardClient() {
             onSaveCategories={handleSaveCategories}
             onResetDefaults={handleResetDefaults}
           />
+        )}
+
+        {activeTab === 'growth' && (
+          <GrowthAndClubView items={items} analytics={itemAnalytics} />
         )}
 
         {activeTab === 'nfc' && (

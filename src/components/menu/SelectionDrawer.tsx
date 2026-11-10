@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Banknote,
   Check,
   Copy,
   CreditCard,
+  Gift,
   Heart,
   MessageCircle,
   Minus,
@@ -19,6 +20,11 @@ import {
 } from 'lucide-react';
 import type { OrderPaymentPreference, TableOrder } from '@/types/database';
 import { useMenuSession } from '@/context/MenuSessionContext';
+import {
+  type ActiveCustomerCoupon,
+  getActiveCustomerCoupon,
+  GROWTH_CLUB_UPDATED_EVENT,
+} from '@/lib/storage/growthClubStorage';
 import {
   buildWhatsAppOrderUrl,
   submitNewTableOrder,
@@ -51,6 +57,22 @@ export function SelectionDrawer() {
     null
   );
   const [pixCopied, setPixCopied] = useState(false);
+  const [activeCoupon, setActiveCoupon] = useState<ActiveCustomerCoupon | null>(
+    null
+  );
+
+  useEffect(() => {
+    const syncCoupon = () => setActiveCoupon(getActiveCustomerCoupon());
+    syncCoupon();
+    window.addEventListener(GROWTH_CLUB_UPDATED_EVENT, syncCoupon);
+    return () =>
+      window.removeEventListener(GROWTH_CLUB_UPDATED_EVENT, syncCoupon);
+  }, [isDrawerOpen]);
+
+  const discountCents = activeCoupon
+    ? Math.round(totalSelectionPriceCents * (activeCoupon.discountPercent / 100))
+    : 0;
+  const finalTotalCents = Math.max(0, totalSelectionPriceCents - discountCents);
 
   const tableLabel =
     sessionOrigin.locationCode !== 'acesso_direto'
@@ -83,7 +105,9 @@ export function SelectionDrawer() {
         priceCents: item.price_cents,
         notes: notes?.trim() || undefined,
       })),
-      totalCents: totalSelectionPriceCents,
+      totalCents: finalTotalCents,
+      discountCents: discountCents > 0 ? discountCents : undefined,
+      couponCode: activeCoupon?.couponCode,
       paymentPreference,
       cashChangeFor:
         paymentPreference === 'cash' && cashChangeFor.trim()
@@ -567,14 +591,33 @@ export function SelectionDrawer() {
               !waiterPresentationMode &&
               orderStatus === 'editing' && (
                 <div className="p-5 bg-[#0F0F0F] border-t border-white/10 space-y-3">
+                  {activeCoupon && discountCents > 0 && (
+                    <div className="px-3 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-between text-xs text-emerald-300">
+                      <span className="flex items-center gap-1.5 font-semibold">
+                        <Gift className="w-3.5 h-3.5" />
+                        Cupom Clube VIP ({activeCoupon.couponCode} -{activeCoupon.discountPercent}%)
+                      </span>
+                      <span className="font-bold">
+                        -{formatCurrencyBRL(discountCents)}
+                      </span>
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-[#A1A1AA]">
                       Total ({totalSelectionCount}{' '}
                       {totalSelectionCount === 1 ? 'item' : 'itens'})
                     </span>
-                    <span className="text-lg font-semibold text-white">
-                      {formatCurrencyBRL(totalSelectionPriceCents)}
-                    </span>
+                    <div className="text-right">
+                      {discountCents > 0 && (
+                        <span className="text-xs text-zinc-500 line-through mr-2">
+                          {formatCurrencyBRL(totalSelectionPriceCents)}
+                        </span>
+                      )}
+                      <span className="text-lg font-semibold text-white">
+                        {formatCurrencyBRL(finalTotalCents)}
+                      </span>
+                    </div>
                   </div>
 
                   <button

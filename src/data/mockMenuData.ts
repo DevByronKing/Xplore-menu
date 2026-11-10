@@ -192,6 +192,9 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     is_featured: true,
     sort_order: 1,
     likes_initial_count: 342,
+    model_glb_url: '/models/focaccia-burrata.glb',
+    ar_scale_fixed: true,
+    dimensions_cm: { width: 24, height: 9, depth: 18 },
   },
   {
     id: 'item-focaccia-stracciatella-figo',
@@ -243,6 +246,9 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     is_featured: true,
     sort_order: 2,
     likes_initial_count: 218,
+    model_glb_url: '/models/focaccia-figo.glb',
+    ar_scale_fixed: true,
+    dimensions_cm: { width: 26, height: 8, depth: 20 },
   },
   {
     id: 'item-shakshuka-tartine-trufada',
@@ -343,6 +349,9 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     is_featured: false,
     sort_order: 4,
     likes_initial_count: 194,
+    model_glb_url: '/models/french-toast.glb',
+    ar_scale_fixed: true,
+    dimensions_cm: { width: 22, height: 11, depth: 22 },
   },
   {
     id: 'item-pistachio-cream-latte',
@@ -392,6 +401,9 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     is_featured: true,
     sort_order: 5,
     likes_initial_count: 412,
+    model_glb_url: '/models/pistachio-latte.glb',
+    ar_scale_fixed: true,
+    dimensions_cm: { width: 14, height: 12, depth: 14 },
   },
   {
     id: 'item-v60-microlote-geisha',
