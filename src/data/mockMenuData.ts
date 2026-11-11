@@ -14,7 +14,9 @@ export const DEMO_RESTAURANT: Restaurant = {
   address: 'Rua dos Pinheiros, 482 — Jardins, São Paulo',
   opening_hours: 'Ter–Dom • 08h às 23h',
   instagram_handle: '@nomade.fornaria',
-  wifi_ssid: 'NOMADE_5G (Senha: sourdough48)',
+  wifi_ssid: 'NOMADE_5G',
+  wifi_password: 'sourdough48',
+  theme_color: '#F59E0B',
   logo_url:
     'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=240&q=80',
   cover_url:
@@ -135,10 +137,10 @@ export const DEMO_TOUCHPOINTS: NfcTouchpoint[] = [
 ];
 
 /**
- * Every dish has:
- * - Slide 1: Local vertical MP4 preparation video (/videos/prep-*.mp4) with a unique poster image
- * - Slide 2: A completely distinct preparation/ingredient photo (never repeating the poster)
- * - Slide 3: A third distinct detail/plated photo
+ * Every dish follows the presentation hierarchy:
+ * 1. Foto (Editorial high-res dish photography)
+ * 2. Vídeo (Professional step-by-step culinary preparation video)
+ * 3. 3D / AR (Interactive textured 3D prototype & 1:1 Table AR)
  */
 export const DEMO_MENU_ITEMS: MenuItem[] = [
   {
@@ -151,23 +153,23 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     price_cents: 5490,
     media_urls: [
       {
-        id: 'm-1a',
-        type: 'video',
-        url: '/videos/prep-focaccia-burrata.mp4?v=4',
-        poster:
-          'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=900&q=80',
-        alt: 'Vídeo do preparo da Focaccia Burrata & Pistache',
-        aspectRatio: '9:16',
-      },
-      {
-        id: 'm-1b',
+        id: 'm-1-foto',
         type: 'image',
-        url: 'https://images.unsplash.com/photo-1539252554453-80ab65ce3586?auto=format&fit=crop&w=900&q=80',
-        alt: 'Corte transversal mostrando o recheio generoso e alvéolos da massa',
+        url: 'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=900&q=85',
+        alt: 'Focaccia Burrata & Pistache recém-montada na tábua rústica',
         aspectRatio: '9:16',
       },
       {
-        id: 'm-1c',
+        id: 'm-1-video',
+        type: 'video',
+        url: '/videos/prep-focaccia-burrata.mp4?v=5',
+        poster:
+          'https://images.unsplash.com/photo-1539252554453-80ab65ce3586?auto=format&fit=crop&w=900&q=80',
+        alt: 'Vídeo profissional do preparo da Focaccia Burrata & Pistache',
+        aspectRatio: '9:16',
+      },
+      {
+        id: 'm-1-detalhe',
         type: 'image',
         url: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=900&q=80',
         alt: 'Fornada artesanal saindo quente do forno de pedra',
@@ -192,7 +194,7 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     is_featured: true,
     sort_order: 1,
     likes_initial_count: 342,
-    model_glb_url: '/models/focaccia-burrata.glb',
+    model_glb_url: '/models/focaccia-burrata.glb?v=2',
     ar_scale_fixed: true,
     dimensions_cm: { width: 24, height: 9, depth: 18 },
   },
@@ -206,23 +208,23 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     price_cents: 5890,
     media_urls: [
       {
-        id: 'm-2a',
-        type: 'video',
-        url: '/videos/prep-focaccia-figo.mp4?v=4',
-        poster:
-          'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=900&q=80',
-        alt: 'Vídeo de montagem da Focaccia com figos e prosciutto',
-        aspectRatio: '9:16',
-      },
-      {
-        id: 'm-2b',
+        id: 'm-2-foto',
         type: 'image',
-        url: 'https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?auto=format&fit=crop&w=900&q=80',
-        alt: 'Finalização com stracciatella fresca e redução balsâmica',
+        url: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=900&q=85',
+        alt: 'Focaccia Stracciatella & Figo servida em pedra ardósia',
         aspectRatio: '9:16',
       },
       {
-        id: 'm-2c',
+        id: 'm-2-video',
+        type: 'video',
+        url: '/videos/prep-focaccia-figo.mp4?v=5',
+        poster:
+          'https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?auto=format&fit=crop&w=900&q=80',
+        alt: 'Vídeo profissional do preparo da Focaccia com figos e prosciutto',
+        aspectRatio: '9:16',
+      },
+      {
+        id: 'm-2-detalhe',
         type: 'image',
         url: 'https://images.unsplash.com/photo-1586444248902-2f64eddc13df?auto=format&fit=crop&w=900&q=80',
         alt: 'Massa de fermentação lenta regada no azeite extravirgem',
@@ -246,7 +248,7 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     is_featured: true,
     sort_order: 2,
     likes_initial_count: 218,
-    model_glb_url: '/models/focaccia-figo.glb',
+    model_glb_url: '/models/focaccia-figo.glb?v=2',
     ar_scale_fixed: true,
     dimensions_cm: { width: 26, height: 8, depth: 20 },
   },
@@ -260,23 +262,23 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     price_cents: 4890,
     media_urls: [
       {
-        id: 'm-3a',
-        type: 'video',
-        url: '/videos/prep-eggs-royale.mp4?v=4',
-        poster:
-          'https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=900&q=80',
-        alt: 'Vídeo do preparo dos ovos pochê e cogumelos trufados',
-        aspectRatio: '9:16',
-      },
-      {
-        id: 'm-3b',
+        id: 'm-3-foto',
         type: 'image',
-        url: 'https://images.unsplash.com/photo-1482049016688-2d3e1b311543?auto=format&fit=crop&w=900&q=80',
-        alt: 'Detalhe da gema cremosa sobre os cogumelos dourados',
+        url: 'https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=900&q=85',
+        alt: 'Eggs Royale & Tartine Trufada em prato de cerâmica artesanal',
         aspectRatio: '9:16',
       },
       {
-        id: 'm-3c',
+        id: 'm-3-video',
+        type: 'video',
+        url: '/videos/prep-eggs-royale.mp4?v=5',
+        poster:
+          'https://images.unsplash.com/photo-1482049016688-2d3e1b311543?auto=format&fit=crop&w=900&q=80',
+        alt: 'Vídeo profissional do preparo dos ovos pochê e cogumelos trufados',
+        aspectRatio: '9:16',
+      },
+      {
+        id: 'm-3-detalhe',
         type: 'image',
         url: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=900&q=80',
         alt: 'Salteado de cogumelos frescos na manteiga e ervas',
@@ -299,6 +301,9 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     is_featured: true,
     sort_order: 3,
     likes_initial_count: 289,
+    model_glb_url: '/models/eggs-royale.glb?v=2',
+    ar_scale_fixed: true,
+    dimensions_cm: { width: 24, height: 8, depth: 24 },
   },
   {
     id: 'item-french-toast-brioche',
@@ -310,23 +315,23 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     price_cents: 4290,
     media_urls: [
       {
-        id: 'm-4a',
-        type: 'video',
-        url: '/videos/prep-french-toast.mp4?v=4',
-        poster:
-          'https://images.unsplash.com/photo-1484723091739-30a097e8f929?auto=format&fit=crop&w=900&q=80',
-        alt: 'Vídeo caramelizando o brioche e finalizando com calda',
-        aspectRatio: '9:16',
-      },
-      {
-        id: 'm-4b',
+        id: 'm-4-foto',
         type: 'image',
-        url: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?auto=format&fit=crop&w=900&q=80',
-        alt: 'Crosta dourada de açúcar demerara com frutas vermelhas',
+        url: 'https://images.unsplash.com/photo-1484723091739-30a097e8f929?auto=format&fit=crop&w=900&q=85',
+        alt: 'Brioche French Toast caramelizado com mascarpone e frutas vermelhas',
         aspectRatio: '9:16',
       },
       {
-        id: 'm-4c',
+        id: 'm-4-video',
+        type: 'video',
+        url: '/videos/prep-french-toast.mp4?v=5',
+        poster:
+          'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?auto=format&fit=crop&w=900&q=80',
+        alt: 'Vídeo profissional caramelizando o brioche e finalizando com calda',
+        aspectRatio: '9:16',
+      },
+      {
+        id: 'm-4-detalhe',
         type: 'image',
         url: 'https://images.unsplash.com/photo-1528207776546-365bb710ee93?auto=format&fit=crop&w=900&q=80',
         alt: 'Finalização com quenelle de mascarpone e mirtilos frescos',
@@ -349,7 +354,7 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     is_featured: false,
     sort_order: 4,
     likes_initial_count: 194,
-    model_glb_url: '/models/french-toast.glb',
+    model_glb_url: '/models/french-toast.glb?v=2',
     ar_scale_fixed: true,
     dimensions_cm: { width: 22, height: 11, depth: 22 },
   },
@@ -363,23 +368,23 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     price_cents: 2690,
     media_urls: [
       {
-        id: 'm-5a',
-        type: 'video',
-        url: '/videos/prep-pistachio-latte.mp4?v=4',
-        poster:
-          'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=900&q=80',
-        alt: 'Vídeo extraindo o espresso e vaporizando o Pistachio Latte',
-        aspectRatio: '9:16',
-      },
-      {
-        id: 'm-5b',
+        id: 'm-5-foto',
         type: 'image',
-        url: 'https://images.unsplash.com/photo-1534778101976-62847782c213?auto=format&fit=crop&w=900&q=80',
-        alt: 'Arte no leite vaporizado sobre ganache de pistache',
+        url: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=900&q=85',
+        alt: 'Pistachio Crème Latte com latte art sedoso e borda de pistache',
         aspectRatio: '9:16',
       },
       {
-        id: 'm-5c',
+        id: 'm-5-video',
+        type: 'video',
+        url: '/videos/prep-pistachio-latte.mp4?v=5',
+        poster:
+          'https://images.unsplash.com/photo-1534778101976-62847782c213?auto=format&fit=crop&w=900&q=80',
+        alt: 'Vídeo profissional extraindo o espresso e desenhando o Latte Art',
+        aspectRatio: '9:16',
+      },
+      {
+        id: 'm-5-detalhe',
         type: 'image',
         url: 'https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?auto=format&fit=crop&w=900&q=80',
         alt: 'Extração cremosa do café especial 100% Arábica',
@@ -401,9 +406,9 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     is_featured: true,
     sort_order: 5,
     likes_initial_count: 412,
-    model_glb_url: '/models/pistachio-latte.glb',
+    model_glb_url: '/models/pistachio-latte.glb?v=2',
     ar_scale_fixed: true,
-    dimensions_cm: { width: 14, height: 12, depth: 14 },
+    dimensions_cm: { width: 15, height: 10, depth: 15 },
   },
   {
     id: 'item-v60-microlote-geisha',
@@ -415,23 +420,23 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     price_cents: 2400,
     media_urls: [
       {
-        id: 'm-6a',
-        type: 'video',
-        url: '/videos/prep-v60-geisha.mp4?v=4',
-        poster:
-          'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=900&q=80',
-        alt: 'Vídeo da infusão manual no método Hario V60',
-        aspectRatio: '9:16',
-      },
-      {
-        id: 'm-6b',
+        id: 'm-6-foto',
         type: 'image',
-        url: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=900&q=80',
-        alt: 'Café especial servido em jarra térmica de vidro',
+        url: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=900&q=85',
+        alt: 'Filtrado Hario V60 • Geisha servido em cerâmica artesanal',
         aspectRatio: '9:16',
       },
       {
-        id: 'm-6c',
+        id: 'm-6-video',
+        type: 'video',
+        url: '/videos/prep-v60-geisha.mp4?v=5',
+        poster:
+          'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=900&q=80',
+        alt: 'Vídeo profissional da infusão manual no método Hario V60',
+        aspectRatio: '9:16',
+      },
+      {
+        id: 'm-6-detalhe',
         type: 'image',
         url: 'https://images.unsplash.com/photo-1447933601403-0c6688de566e?auto=format&fit=crop&w=900&q=80',
         alt: 'Grãos de microlote Geisha recém-torrados na casa',
@@ -451,6 +456,9 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     is_featured: false,
     sort_order: 6,
     likes_initial_count: 128,
+    model_glb_url: '/models/v60-geisha.glb?v=2',
+    ar_scale_fixed: true,
+    dimensions_cm: { width: 15, height: 11, depth: 15 },
   },
   {
     id: 'item-espresso-tonic-yuzu',
@@ -462,23 +470,23 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     price_cents: 2590,
     media_urls: [
       {
-        id: 'm-7a',
-        type: 'video',
-        url: '/videos/prep-espresso-tonic.mp4?v=4',
-        poster:
-          'https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?auto=format&fit=crop&w=900&q=80',
-        alt: 'Vídeo formando as duas camadas do Espresso Tonic com gelo',
-        aspectRatio: '9:16',
-      },
-      {
-        id: 'm-7b',
+        id: 'm-7-foto',
         type: 'image',
-        url: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=900&q=80',
-        alt: 'Contraste do café escuro descendo sobre a tônica cítrica',
+        url: 'https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?auto=format&fit=crop&w=900&q=85',
+        alt: 'Yuzu & Siciliano Espresso Tonic em copo de cristal com gelo',
         aspectRatio: '9:16',
       },
       {
-        id: 'm-7c',
+        id: 'm-7-video',
+        type: 'video',
+        url: '/videos/prep-espresso-tonic.mp4?v=5',
+        poster:
+          'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=900&q=80',
+        alt: 'Vídeo profissional formando as camadas do Espresso Tonic',
+        aspectRatio: '9:16',
+      },
+      {
+        id: 'm-7-detalhe',
         type: 'image',
         url: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=900&q=80',
         alt: 'Preparo com limão siciliano fresco e gelo translúcido',
@@ -500,6 +508,9 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     is_featured: true,
     sort_order: 7,
     likes_initial_count: 276,
+    model_glb_url: '/models/espresso-tonic.glb?v=2',
+    ar_scale_fixed: true,
+    dimensions_cm: { width: 10, height: 14, depth: 10 },
   },
   {
     id: 'item-matcha-strawberry-cloud',
@@ -511,23 +522,23 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     price_cents: 2890,
     media_urls: [
       {
-        id: 'm-8a',
-        type: 'video',
-        url: '/videos/prep-matcha-cloud.mp4?v=4',
-        poster:
-          'https://images.unsplash.com/photo-1536256263959-770b48d82b0a?auto=format&fit=crop&w=900&q=80',
-        alt: 'Vídeo batendo o Matcha Uji e montando sobre compota de morango',
-        aspectRatio: '9:16',
-      },
-      {
-        id: 'm-8b',
+        id: 'm-8-foto',
         type: 'image',
-        url: 'https://images.unsplash.com/photo-1515823064-d6e0c04616a7?auto=format&fit=crop&w=900&q=80',
-        alt: 'Emulsão tradicional do chá verde cerimonial com chasen de bambu',
+        url: 'https://images.unsplash.com/photo-1536256263959-770b48d82b0a?auto=format&fit=crop&w=900&q=85',
+        alt: 'Iced Strawberry Matcha em três camadas artesanais',
         aspectRatio: '9:16',
       },
       {
-        id: 'm-8c',
+        id: 'm-8-video',
+        type: 'video',
+        url: '/videos/prep-matcha-cloud.mp4?v=5',
+        poster:
+          'https://images.unsplash.com/photo-1515823064-d6e0c04616a7?auto=format&fit=crop&w=900&q=80',
+        alt: 'Vídeo profissional batendo o Matcha Uji com chasen de bambu',
+        aspectRatio: '9:16',
+      },
+      {
+        id: 'm-8-detalhe',
         type: 'image',
         url: 'https://images.unsplash.com/photo-1556881286-fc6915169721?auto=format&fit=crop&w=900&q=80',
         alt: 'Camadas de morango orgânico, leite vegetal e espuma fria',
@@ -549,6 +560,9 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     is_featured: false,
     sort_order: 8,
     likes_initial_count: 319,
+    model_glb_url: '/models/matcha-cloud.glb?v=2',
+    ar_scale_fixed: true,
+    dimensions_cm: { width: 10, height: 14, depth: 10 },
   },
 ];
 

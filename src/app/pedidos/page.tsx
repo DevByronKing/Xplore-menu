@@ -25,13 +25,22 @@ export default function KitchenLiveOrdersPage() {
             </h1>
           </div>
 
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-xs font-semibold text-white transition-colors"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Ir para o Painel Completo</span>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/garcom"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-xs font-semibold text-emerald-300 transition-colors"
+            >
+              <span>Terminal do Garçom (/garcom)</span>
+            </Link>
+
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-xs font-semibold text-white transition-colors"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Painel Completo</span>
+            </Link>
+          </div>
         </div>
       </header>
 

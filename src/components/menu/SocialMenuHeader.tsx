@@ -1,261 +1,211 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Gift, Heart, Moon, Star, Sun } from 'lucide-react';
-import type { Category, GrowthClubConfig } from '@/types/database';
+import React from 'react';
+import {
+  Flame,
+  Croissant,
+  Sparkles,
+  Coffee,
+  GlassWater,
+  Gift,
+  Heart,
+  Moon,
+  Sun,
+  Utensils,
+} from 'lucide-react';
+import type { Category, Restaurant } from '@/types/database';
 import { useMenuSession } from '@/context/MenuSessionContext';
 import { useTheme } from '@/context/ThemeContext';
-import { GrowthClubModal } from '@/components/menu/GrowthClubModal';
-import {
-  type ActiveCustomerCoupon,
-  getActiveCustomerCoupon,
-  GROWTH_CLUB_UPDATED_EVENT,
-  loadGrowthClubConfig,
-} from '@/lib/storage/growthClubStorage';
 import { cn } from '@/lib/utils';
 
 interface SocialMenuHeaderProps {
+  restaurant: Restaurant;
   categories: Category[];
   activeCategorySlug: string;
   onSelectCategory: (slug: string) => void;
+  onOpenDrawer: () => void;
+  onOpenWifiModal: () => void;
+  onOpenGrowthClubModal?: () => void;
 }
 
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  Flame,
+  Croissant,
+  Sparkles,
+  Coffee,
+  GlassWater,
+  Utensils,
+};
+
 export function SocialMenuHeader({
+  restaurant,
   categories,
   activeCategorySlug,
   onSelectCategory,
+  onOpenDrawer,
+  onOpenGrowthClubModal,
 }: SocialMenuHeaderProps) {
-  const router = useRouter();
-  const {
-    restaurant,
-    sessionOrigin,
-    totalSelectionCount,
-    likedItemIds,
-    setIsDrawerOpen,
-  } = useMenuSession();
+  const { totalSelectionCount, likedItemIds } = useMenuSession();
   const { isLight, toggleTheme } = useTheme();
-
-  const [growthConfig, setGrowthConfig] = useState<GrowthClubConfig>(
-    loadGrowthClubConfig()
-  );
-  const [activeCoupon, setActiveCoupon] = useState<ActiveCustomerCoupon | null>(
-    null
-  );
-  const [isGrowthModalOpen, setIsGrowthModalOpen] = useState(false);
-
-  useEffect(() => {
-    const sync = () => {
-      setGrowthConfig(loadGrowthClubConfig());
-      setActiveCoupon(getActiveCustomerCoupon());
-    };
-    sync();
-    window.addEventListener(GROWTH_CLUB_UPDATED_EVENT, sync);
-    window.addEventListener('storage', sync);
-    return () => {
-      window.removeEventListener(GROWTH_CLUB_UPDATED_EVENT, sync);
-      window.removeEventListener('storage', sync);
-    };
-  }, []);
-
-  const savedCount = totalSelectionCount || likedItemIds.length;
-  const tapCountRef = useRef(0);
-  const tapTimerRef = useRef<number | null>(null);
-
-  // Secret Owner Gesture: 3 quick taps on the restaurant logo opens /dashboard
-  const handleLogoSecretTap = () => {
-    tapCountRef.current += 1;
-    if (tapTimerRef.current) {
-      window.clearTimeout(tapTimerRef.current);
-    }
-    if (tapCountRef.current >= 3) {
-      tapCountRef.current = 0;
-      router.push('/dashboard');
-      return;
-    }
-    tapTimerRef.current = window.setTimeout(() => {
-      tapCountRef.current = 0;
-    }, 600);
-  };
+  const badgeCount = totalSelectionCount || likedItemIds.length;
 
   return (
-    <>
-      <header
-        className={cn(
-          'sticky top-0 z-40 w-full backdrop-blur-xl border-b transition-colors duration-200',
-          isLight
-            ? 'bg-[#F6F4EF]/90 border-black/[0.07]'
-            : 'bg-[#0F0F0F]/85 border-white/[0.04]'
-        )}
-      >
-        <div className="max-w-md mx-auto">
-          {/* Top Brand Row */}
-          <div className="px-4 pt-3.5 pb-2.5 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <button
-                type="button"
-                onClick={handleLogoSecretTap}
-                className={cn(
-                  'h-8 w-8 rounded-full overflow-hidden shrink-0 border focus:outline-none',
-                  isLight
-                    ? 'bg-black/5 border-black/15'
-                    : 'bg-white/10 border-white/15'
-                )}
-                aria-label={restaurant.name}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={restaurant.logo_url}
-                  alt={restaurant.name}
-                  className="h-full w-full object-cover"
-                />
-              </button>
-              <div className="min-w-0 flex items-center gap-1.5">
+    <header
+      className={cn(
+        'sticky top-0 z-30 backdrop-blur-xl border-b transition-colors',
+        isLight
+          ? 'bg-[#F6F4EF]/95 border-zinc-300/80 text-zinc-900'
+          : 'bg-[#0F0F0F]/90 border-white/[0.06] text-white'
+      )}
+    >
+      <div className="max-w-[480px] mx-auto px-4 pt-3 pb-2.5">
+        {/* Linha Superior: Identidade do Restaurante + Clube VIP + Tema + Pedido */}
+        <div className="flex items-center justify-between gap-2 mb-2.5">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="relative h-9 w-9 rounded-full overflow-hidden border border-white/20 shrink-0 shadow">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={restaurant.logo_url}
+                alt={restaurant.name}
+                className="h-full w-full object-cover"
+              />
+            </div>
+
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
                 <h1
                   className={cn(
-                    'text-sm font-semibold tracking-tight truncate',
-                    isLight ? 'text-[#141413]' : 'text-white'
+                    'font-serif text-base tracking-tight truncate',
+                    isLight ? 'text-zinc-900 font-bold' : 'text-white'
                   )}
                 >
                   {restaurant.name}
                 </h1>
-                {sessionOrigin.locationCode !== 'acesso_direto' && (
-                  <span
-                    className={cn(
-                      'px-2 py-0.5 rounded-full text-[10px] font-medium shrink-0',
-                      isLight
-                        ? 'bg-black/[0.06] text-stone-600'
-                        : 'bg-white/[0.08] text-zinc-400'
-                    )}
-                  >
-                    {sessionOrigin.locationLabel.split('•')[0]?.trim()}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Right Actions: Clube/Avaliação + Theme Toggle + Salvos Pill */}
-            <div className="flex items-center gap-1.5 shrink-0">
-              <button
-                type="button"
-                onClick={() => setIsGrowthModalOpen(true)}
-                className={cn(
-                  'flex items-center gap-1 px-2.5 py-1.5 rounded-full border text-[11px] font-semibold transition-all active:scale-95',
-                  activeCoupon
-                    ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
-                    : growthConfig.clubModuleEnabled
-                      ? 'bg-amber-500/15 border-amber-400/35 text-amber-400 hover:bg-amber-500/25'
-                      : isLight
-                        ? 'bg-black/[0.06] border-black/10 text-[#141413]'
-                        : 'bg-white/[0.10] border-white/10 text-white'
-                )}
-              >
-                {growthConfig.clubModuleEnabled ? (
-                  <>
-                    <Gift className="w-3.5 h-3.5" />
-                    <span>
-                      {activeCoupon
-                        ? `-${activeCoupon.discountPercent}% Ativo`
-                        : 'Clube VIP'}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                    <span>Avaliar</span>
-                  </>
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={toggleTheme}
-                title={
-                  isLight ? 'Mudar para Modo Escuro' : 'Mudar para Modo Claro'
-                }
-                aria-label={
-                  isLight ? 'Mudar para Modo Escuro' : 'Mudar para Modo Claro'
-                }
-                className={cn(
-                  'h-8 w-8 rounded-full flex items-center justify-center border transition-all active:scale-95',
-                  isLight
-                    ? 'bg-black/[0.06] hover:bg-black/[0.11] border-black/10 text-[#141413]'
-                    : 'bg-white/[0.10] hover:bg-white/[0.16] border-white/10 text-white'
-                )}
-              >
-                {isLight ? (
-                  <Moon className="w-3.5 h-3.5" />
-                ) : (
-                  <Sun className="w-3.5 h-3.5 text-amber-300" />
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setIsDrawerOpen(true)}
-                className={cn(
-                  'flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-md border text-xs font-medium transition-all active:scale-95',
-                  isLight
-                    ? 'bg-black/[0.07] hover:bg-black/[0.12] border-black/10 text-[#141413]'
-                    : 'bg-white/[0.12] hover:bg-white/[0.18] border-white/10 text-white'
-                )}
-                aria-label="Abrir meus favoritos e pedido"
-              >
-                <Heart
-                  className={cn(
-                    'w-3.5 h-3.5 transition-colors',
-                    savedCount > 0
-                      ? isLight
-                        ? 'fill-[#141413] text-[#141413]'
-                        : 'fill-white text-white'
-                      : isLight
-                        ? 'text-[#141413]/75'
-                        : 'text-white/80'
-                  )}
+                <span
+                  className="inline-block h-1.5 w-1.5 rounded-full shrink-0 bg-emerald-400"
+                  title="Cozinha aberta"
                 />
-                <span>{savedCount > 0 ? savedCount : 'Salvos'}</span>
-              </button>
+              </div>
+              <p
+                className={cn(
+                  'text-[11px] truncate',
+                  isLight ? 'text-zinc-600' : 'text-[#A1A1AA]'
+                )}
+              >
+                {restaurant.tagline}
+              </p>
             </div>
           </div>
 
-          {/* Horizontal Category Pills Bar */}
-          <nav
-            aria-label="Categorias do cardápio"
-            className="px-4 pb-3 pt-0.5 overflow-x-auto no-scrollbar"
-          >
-            <div className="flex items-center gap-2 min-w-max">
-              {categories.map((cat) => {
-                const isActive = activeCategorySlug === cat.slug;
-                return (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => onSelectCategory(cat.slug)}
-                    className={cn(
-                      'px-4 py-1.5 rounded-full text-xs transition-all duration-300 ease-out shrink-0 select-none',
-                      isActive
-                        ? isLight
-                          ? 'bg-[#141413] text-[#FFFFFF] font-semibold shadow-sm scale-[1.02]'
-                          : 'bg-[#FFFFFF] text-[#0F0F0F] font-semibold shadow-sm scale-[1.02]'
-                        : isLight
-                          ? 'bg-black/[0.06] text-[#141413]/85 font-medium hover:bg-black/[0.11]'
-                          : 'bg-white/[0.12] text-white/90 font-medium backdrop-blur-md hover:bg-white/[0.18]'
-                    )}
-                  >
-                    {cat.name}
-                  </button>
-                );
-              })}
-            </div>
-          </nav>
-        </div>
-      </header>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* Botão Clube VIP & Avaliação (Alto Contraste no Modo Claro e Escuro) */}
+            {onOpenGrowthClubModal && (
+              <button
+                type="button"
+                onClick={onOpenGrowthClubModal}
+                className={cn(
+                  'flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-bold transition-all active:scale-95 shadow-sm',
+                  isLight
+                    ? 'bg-amber-400 hover:bg-amber-500 text-[#0F0F0F] border border-amber-500/60'
+                    : 'bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-300'
+                )}
+                title="Clube de Benefícios & Avaliação"
+              >
+                <Gift className="w-3.5 h-3.5" />
+                <span>Clube VIP</span>
+              </button>
+            )}
 
-      <GrowthClubModal
-        isOpen={isGrowthModalOpen}
-        initialTab={growthConfig.clubModuleEnabled ? 'club' : 'review'}
-        onClose={() => setIsGrowthModalOpen(false)}
-      />
-    </>
+            {/* Alternador Modo Claro / Modo Escuro */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label={
+                isLight ? 'Ativar Modo Escuro' : 'Ativar Modo Claro'
+              }
+              title={isLight ? 'Mudar para Modo Escuro' : 'Mudar para Modo Claro'}
+              className={cn(
+                'flex items-center justify-center h-8 w-8 rounded-full border transition-all active:scale-95',
+                isLight
+                  ? 'bg-white border-zinc-300 text-zinc-800 hover:bg-zinc-100'
+                  : 'bg-white/[0.1] border-white/10 text-white hover:bg-white/[0.18]'
+              )}
+            >
+              {isLight ? (
+                <Moon className="w-3.5 h-3.5" />
+              ) : (
+                <Sun className="w-3.5 h-3.5 text-amber-400" />
+              )}
+            </button>
+
+            {/* Botão de Seleção / Pedido */}
+            <button
+              type="button"
+              onClick={onOpenDrawer}
+              aria-label="Ver itens salvos e pedido"
+              className={cn(
+                'relative flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold transition-all active:scale-95',
+                badgeCount > 0
+                  ? 'bg-emerald-500 border-emerald-400 text-white shadow-md keep-white'
+                  : isLight
+                    ? 'bg-white border-zinc-300 text-zinc-900'
+                    : 'bg-white/[0.12] border-white/10 text-white'
+              )}
+            >
+              <Heart
+                className={cn(
+                  'w-3.5 h-3.5 transition-colors',
+                  badgeCount > 0 ? 'fill-white text-white' : ''
+                )}
+              />
+              <span>{badgeCount > 0 ? `Pedido (${badgeCount})` : 'Salvos'}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Pílulas Horizontais de Categorias */}
+        <nav
+          aria-label="Categorias do cardápio"
+          className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5"
+        >
+          {categories.map((cat) => {
+            const IconComponent = ICON_MAP[cat.icon_name || 'Utensils'] || Utensils;
+            const isActive = activeCategorySlug === cat.slug;
+
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => onSelectCategory(cat.slug)}
+                className={cn(
+                  'flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs whitespace-nowrap transition-all duration-200 shrink-0',
+                  isActive
+                    ? isLight
+                      ? 'bg-[#141413] text-white font-semibold shadow-sm keep-white'
+                      : 'bg-[#FFFFFF] text-[#0F0F0F] font-semibold shadow-sm'
+                    : isLight
+                      ? 'bg-white text-zinc-700 hover:text-zinc-950 border border-zinc-300/80'
+                      : 'bg-white/[0.12] text-white/85 hover:text-white backdrop-blur-md'
+                )}
+              >
+                <IconComponent
+                  className={cn(
+                    'w-3.5 h-3.5',
+                    isActive
+                      ? isLight
+                        ? 'text-amber-400'
+                        : 'text-[#0F0F0F]'
+                      : isLight
+                        ? 'text-zinc-500'
+                        : 'text-[#A1A1AA]'
+                  )}
+                />
+                <span>{cat.name}</span>
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+    </header>
   );
 }

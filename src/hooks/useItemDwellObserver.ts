@@ -1,87 +1,83 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import type { MenuItem } from '@/types/database';
 import { useMenuSession } from '@/context/MenuSessionContext';
 
 interface UseItemDwellObserverOptions {
   item: MenuItem;
-  visibilityThreshold?: number; // Default 0.7 (70% of viewport)
-  onActiveChange?: (isActive: boolean) => void;
+  /** Minimum fraction of the card visible to start counting dwell time (default 0.55) */
+  threshold?: number;
+  /** Minimum dwell duration in ms before logging (default 800ms) */
+  minDwellMs?: number;
 }
 
 /**
- * Custom Behavioral Analytics Hook:
- * - Uses native IntersectionObserver to measure exact Dwell Time (ms) when a card
- *   is >= 70% visible in the viewport.
- * - Automatically pauses measurement if the browser tab is hidden (visibilitychange)
- *   and flushes the exact elapsed milliseconds when the user scrolls away.
- * - Exposes live elapsed ms while the user is actively looking at the card.
+ * Tracks how long a dish card stays visible in the customer's viewport
+ * without causing re-renders or re-creating observers during scroll.
  */
 export function useItemDwellObserver({
   item,
-  visibilityThreshold = 0.7,
-  onActiveChange,
+  threshold = 0.55,
+  minDwellMs = 800,
 }: UseItemDwellObserverOptions) {
   const { recordItemDwellTime } = useMenuSession();
-  const cardRef = useRef<HTMLElement | null>(null);
+  const elementRef = useRef<HTMLElement | null>(null);
+  const enterTimestampRef = useRef<number | null>(null);
+  const lastRatioRef = useRef<number>(threshold);
+  const isVisibleRef = useRef<boolean>(false);
   const [isVisibleInViewport, setIsVisibleInViewport] = useState(false);
-  const [activeElapsedMs, setActiveElapsedMs] = useState(0);
 
-  const entryTimestampRef = useRef<number | null>(null);
-  const peakRatioRef = useRef<number>(0);
+  const commitCurrentDwell = useCallback(() => {
+    if (enterTimestampRef.current !== null) {
+      const elapsed = Math.round(performance.now() - enterTimestampRef.current);
+      enterTimestampRef.current = null;
+      if (elapsed >= minDwellMs) {
+        recordItemDwellTime(item, elapsed, lastRatioRef.current);
+      }
+    }
+  }, [item, minDwellMs, recordItemDwellTime]);
 
   useEffect(() => {
-    const element = cardRef.current;
-    if (!element || typeof IntersectionObserver === 'undefined') return;
-
-    const commitCurrentDwell = () => {
-      if (entryTimestampRef.current !== null) {
-        const elapsed = performance.now() - entryTimestampRef.current;
-        entryTimestampRef.current = null;
-        setActiveElapsedMs(0);
-        if (elapsed >= 250) {
-          recordItemDwellTime(item, elapsed, peakRatioRef.current || visibilityThreshold);
-        }
-      }
-    };
+    const node = elementRef.current;
+    if (!node || typeof IntersectionObserver === 'undefined') return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        const entry = entries[0];
-        if (!entry) return;
-
-        const isAboveThreshold =
-          entry.isIntersecting && entry.intersectionRatio >= visibilityThreshold;
-
-        if (isAboveThreshold) {
-          peakRatioRef.current = Math.max(peakRatioRef.current, entry.intersectionRatio);
-          if (entryTimestampRef.current === null) {
-            entryTimestampRef.current = performance.now();
-            setIsVisibleInViewport(true);
-            onActiveChange?.(true);
-          }
-        } else {
-          if (entryTimestampRef.current !== null) {
+        for (const entry of entries) {
+          if (entry.isIntersecting && entry.intersectionRatio >= threshold) {
+            lastRatioRef.current = entry.intersectionRatio;
+            if (enterTimestampRef.current === null) {
+              enterTimestampRef.current = performance.now();
+            }
+            if (!isVisibleRef.current) {
+              isVisibleRef.current = true;
+              setIsVisibleInViewport(true);
+            }
+          } else {
+            if (isVisibleRef.current) {
+              isVisibleRef.current = false;
+              setIsVisibleInViewport(false);
+            }
             commitCurrentDwell();
-            setIsVisibleInViewport(false);
-            onActiveChange?.(false);
-            peakRatioRef.current = 0;
           }
         }
       },
       {
-        threshold: [0, 0.4, 0.7, 0.85, 0.95],
+        threshold: [0, threshold],
       }
     );
 
-    observer.observe(element);
+    observer.observe(node);
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
         commitCurrentDwell();
-      } else if (document.visibilityState === 'visible' && isVisibleInViewport) {
-        entryTimestampRef.current = performance.now();
+      } else if (
+        document.visibilityState === 'visible' &&
+        isVisibleRef.current
+      ) {
+        enterTimestampRef.current = performance.now();
       }
     };
 
@@ -92,27 +88,10 @@ export function useItemDwellObserver({
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       commitCurrentDwell();
     };
-  }, [item, onActiveChange, recordItemDwellTime, visibilityThreshold, isVisibleInViewport]);
-
-  // Live ticker while card is actively viewed (updates every 200ms for smooth HUD display)
-  useEffect(() => {
-    if (!isVisibleInViewport) {
-      setActiveElapsedMs(0);
-      return;
-    }
-
-    const ticker = window.setInterval(() => {
-      if (entryTimestampRef.current !== null) {
-        setActiveElapsedMs(Math.round(performance.now() - entryTimestampRef.current));
-      }
-    }, 200);
-
-    return () => window.clearInterval(ticker);
-  }, [isVisibleInViewport]);
+  }, [threshold, commitCurrentDwell]);
 
   return {
-    cardRef,
+    elementRef,
     isVisibleInViewport,
-    activeElapsedMs,
   };
 }

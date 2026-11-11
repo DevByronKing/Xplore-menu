@@ -41,6 +41,7 @@ export function SelectionDrawer() {
     addItemToSelection,
     removeItemFromSelection,
     updateItemNotes,
+    completeOrderSelection,
     totalSelectionCount,
     totalSelectionPriceCents,
     trackEvent,
@@ -136,6 +137,9 @@ export function SelectionDrawer() {
   };
 
   const closeDrawer = () => {
+    if (orderStatus === 'sent' || orderStatus === 'pix') {
+      completeOrderSelection();
+    }
     setWaiterPresentationMode(false);
     setOrderStatus('editing');
     setIsDrawerOpen(false);

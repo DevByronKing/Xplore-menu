@@ -111,3 +111,37 @@ export async function PATCH(request: NextRequest) {
     );
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const body = (await request.json()) as {
+      tableLabel?: string;
+      orderId?: string;
+    };
+
+    if (body.orderId) {
+      const idx = runtimeOrdersStore.findIndex((o) => o.id === body.orderId);
+      if (idx > -1) runtimeOrdersStore.splice(idx, 1);
+    } else if (body.tableLabel) {
+      const target = body.tableLabel.trim().toLowerCase();
+      for (let i = runtimeOrdersStore.length - 1; i >= 0; i--) {
+        if (
+          runtimeOrdersStore[i]?.tableLabel.trim().toLowerCase() === target
+        ) {
+          runtimeOrdersStore.splice(i, 1);
+        }
+      }
+    }
+
+    return NextResponse.json({ ok: true }, { status: 200 });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error:
+          error instanceof Error ? error.message : 'Erro ao encerrar comanda',
+      },
+      { status: 400 }
+    );
+  }
+}

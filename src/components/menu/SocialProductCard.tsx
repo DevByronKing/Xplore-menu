@@ -1,23 +1,46 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Box, Camera, ChevronDown, Heart, X } from 'lucide-react';
-import type { MenuItem } from '@/types/database';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import dynamic from 'next/dynamic';
+import {
+  Heart,
+  Plus,
+  Check,
+  Sparkles,
+  AlertTriangle,
+  Clock,
+  Flame,
+  Utensils,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  Box,
+  Camera,
+  Play,
+  Image as ImageIcon,
+  Maximize2,
+} from 'lucide-react';
+import type { MenuItem, MediaAsset } from '@/types/database';
 import { useMenuSession } from '@/context/MenuSessionContext';
-import { useTheme } from '@/context/ThemeContext';
 import { useItemDwellObserver } from '@/hooks/useItemDwellObserver';
+import { formatCurrencyBRL, cn } from '@/lib/utils';
 import { ProductARModal } from '@/components/menu/ProductARModal';
-import { cn, formatCurrencyBRL } from '@/lib/utils';
+
+const DishARViewer = dynamic(
+  () => import('@/components/menu/DishARViewer'),
+  { ssr: false }
+);
 
 interface SocialProductCardProps {
   item: MenuItem;
-  priorityLoad?: boolean;
+  categoryName?: string;
+  priority?: boolean;
 }
 
-export function SocialProductCard({
-  item,
-  priorityLoad = false,
-}: SocialProductCardProps) {
+type PresentationStage = 'photo' | 'video' | '3d';
+
+export function SocialProductCard({ item }: SocialProductCardProps) {
   const {
     isItemLiked,
     getItemQuantity,
@@ -26,421 +49,580 @@ export function SocialProductCard({
     removeItemFromSelection,
     trackEvent,
   } = useMenuSession();
-  const { isLight } = useTheme();
 
-  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
-  const [isAllergensExpanded, setIsAllergensExpanded] = useState(false);
-  const [showDoubleTapHeart, setShowDoubleTapHeart] = useState(false);
-  const [videoError, setVideoError] = useState(false);
-  const [videoProgressPct, setVideoProgressPct] = useState(0);
-  const [isArModalOpen, setIsArModalOpen] = useState(false);
+  const { elementRef, isVisibleInViewport } = useItemDwellObserver({
+    item,
+    threshold: 0.55,
+  });
 
-  const videoRef = useRef<HTMLVideoElement | null>(null);
+  // Separate media into primary Photo and primary Preparation Video
+  const { primaryPhoto, primaryVideo } = useMemo(() => {
+    const assets = Array.isArray(item.media_urls) ? item.media_urls : [];
+    const photo =
+      assets.find((m) => m.type === 'image') ||
+      ({
+        id: `${item.id}-fallback-img`,
+        type: 'image',
+        url:
+          assets[0]?.poster ||
+          'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=900&q=85',
+        alt: item.name,
+      } as MediaAsset);
+
+    const video = assets.find((m) => m.type === 'video') || null;
+    return { primaryPhoto: photo, primaryVideo: video };
+  }, [item]);
+
+  const modelGlbUrl =
+    item.model_glb_url || '/models/focaccia-burrata.glb?v=2';
+
+  // Presentation order requested by user: 1. Foto -> 2. Vídeo -> 3. 3D/AR
+  const [stage, setStage] = useState<PresentationStage>('photo');
+  const [showDetails, setShowDetails] = useState(false);
+  const [showHeartBurst, setShowHeartBurst] = useState(false);
+  const [videoFailed, setVideoFailed] = useState(false);
+  const [videoStepLabel, setVideoStepLabel] = useState<string>(
+    'Etapa 1/4 • Início do Preparo'
+  );
+  const [showARModal, setShowARModal] = useState(false);
+
   const lastTapRef = useRef<number>(0);
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
-  const mediaList = item.media_urls.length > 0 ? item.media_urls : [];
-  const activeMedia = mediaList[currentMediaIndex] ?? mediaList[0];
+  const isLiked = isItemLiked(item.id);
+  const selectedQuantity = getItemQuantity(item.id);
+  const isSelected = selectedQuantity > 0;
 
-  const liked = isItemLiked(item.id);
-  const quantity = getItemQuantity(item.id);
-  const isSaved = liked || quantity > 0;
+  const stagesOrder: PresentationStage[] = primaryVideo
+    ? ['photo', 'video', '3d']
+    : ['photo', '3d'];
+  const currentStageIndex = stagesOrder.indexOf(stage);
 
-  // Primary badge (only 1 clean badge in top-left as per reference)
-  const primaryBadge = item.badges[0];
+  // Control HTML5 video playback when in 'video' stage and visible in viewport
+  useEffect(() => {
+    const videoEl = videoRef.current;
+    if (!videoEl) return;
 
-  // Autoplay/pause video based on >=70% viewport visibility
-  const handleActiveViewportChange = useCallback((isActive: boolean) => {
-    const vid = videoRef.current;
-    if (!vid) return;
-    if (isActive) {
-      const playPromise = vid.play();
+    if (stage === 'video' && isVisibleInViewport && !videoFailed) {
+      const playPromise = videoEl.play();
       if (playPromise !== undefined) {
         playPromise.catch(() => {
-          // Autoplay blocked or low-power mode; poster remains visible
+          // Autoplay fallback handled gracefully
         });
       }
     } else {
-      vid.pause();
+      videoEl.pause();
     }
-  }, []);
+  }, [stage, isVisibleInViewport, videoFailed]);
 
-  const { cardRef, isVisibleInViewport } = useItemDwellObserver({
-    item,
-    visibilityThreshold: 0.7,
-    onActiveChange: handleActiveViewportChange,
-  });
-
-  useEffect(() => {
-    setVideoError(false);
-    setVideoProgressPct(0);
-    if (
-      activeMedia?.type === 'video' &&
-      isVisibleInViewport &&
-      videoRef.current
-    ) {
-      videoRef.current.play().catch(() => {});
-    }
-  }, [currentMediaIndex, activeMedia?.type, isVisibleInViewport]);
-
-  const handleVideoTimeUpdate = () => {
-    const vid = videoRef.current;
-    if (!vid || !vid.duration || !Number.isFinite(vid.duration)) return;
-    const pct = Math.min(100, Math.max(0, (vid.currentTime / vid.duration) * 100));
-    setVideoProgressPct(pct);
-  };
-
-  const handleNextMedia = useCallback(() => {
-    if (mediaList.length <= 1) return;
-    const nextIdx = (currentMediaIndex + 1) % mediaList.length;
-    setCurrentMediaIndex(nextIdx);
-    trackEvent('media_swipe', item.id, null, { media_index: nextIdx });
-  }, [currentMediaIndex, item.id, mediaList.length, trackEvent]);
-
-  const handlePrevMedia = useCallback(() => {
-    if (mediaList.length <= 1) return;
-    const prevIdx =
-      (currentMediaIndex - 1 + mediaList.length) % mediaList.length;
-    setCurrentMediaIndex(prevIdx);
-    trackEvent('media_swipe', item.id, null, { media_index: prevIdx });
-  }, [currentMediaIndex, item.id, mediaList.length, trackEvent]);
-
-  // Horizontal touch swipe for carousel
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartXRef.current = e.touches[0]?.clientX ?? null;
-    touchStartYRef.current = e.touches[0]?.clientY ?? null;
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (
-      touchStartXRef.current === null ||
-      touchStartYRef.current === null ||
-      mediaList.length <= 1
-    ) {
-      return;
-    }
-    const endX = e.changedTouches[0]?.clientX ?? touchStartXRef.current;
-    const endY = e.changedTouches[0]?.clientY ?? touchStartYRef.current;
-    const deltaX = touchStartXRef.current - endX;
-    const deltaY = Math.abs(touchStartYRef.current - endY);
-
-    touchStartXRef.current = null;
-    touchStartYRef.current = null;
-
-    // Only trigger slide change if horizontal swipe is dominant
-    if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > deltaY) {
-      if (deltaX > 0) {
-        handleNextMedia();
-      } else {
-        handlePrevMedia();
-      }
-    }
-  };
-
-  // Toggle favorite + selection bag in 1 tap
-  const handleToggleFavoriteAction = (e?: React.MouseEvent) => {
+  const switchStage = (nextStage: PresentationStage, e?: React.MouseEvent) => {
     e?.stopPropagation();
-    if (!item.is_available) return;
-
-    if (quantity > 0) {
-      removeItemFromSelection(item, true);
-      if (liked) toggleLikeItem(item);
-    } else {
-      addItemToSelection(item);
-    }
-  };
-
-  // Story-style tap zones (left 30% prev, right 30% next, double-tap center to favorite)
-  const handleMediaClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const now = Date.now();
-    const isDoubleTap = now - lastTapRef.current < 280;
-    lastTapRef.current = now;
-
-    if (isDoubleTap) {
-      if (quantity === 0 && item.is_available) {
-        addItemToSelection(item);
-      }
-      setShowDoubleTapHeart(true);
-      window.setTimeout(() => setShowDoubleTapHeart(false), 650);
-      return;
-    }
-
-    if (mediaList.length > 1) {
-      const rect = e.currentTarget.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      const ratio = clickX / rect.width;
-      if (ratio < 0.3) {
-        handlePrevMedia();
-      } else if (ratio > 0.7) {
-        handleNextMedia();
-      }
-    }
-  };
-
-  const handleToggleAllergens = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const nextState = !isAllergensExpanded;
-    setIsAllergensExpanded(nextState);
-    if (nextState) {
-      trackEvent('allergen_expand', item.id, null, {
+    if (nextStage === stage) return;
+    setStage(nextStage);
+    const idx = stagesOrder.indexOf(nextStage);
+    trackEvent('media_swipe', item.id, null, {
+      media_index: Math.max(0, idx),
+    });
+    if (nextStage === '3d') {
+      trackEvent('3d_rotate', item.id, null, {
         price_cents: item.price_cents,
       });
     }
   };
 
+  const handlePrevStage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const prevIdx =
+      (currentStageIndex - 1 + stagesOrder.length) % stagesOrder.length;
+    const target = stagesOrder[prevIdx];
+    if (target) switchStage(target);
+  };
+
+  const handleNextStage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const nextIdx = (currentStageIndex + 1) % stagesOrder.length;
+    const target = stagesOrder[nextIdx];
+    if (target) switchStage(target);
+  };
+
+  // Double-tap on photo/video canvas to like (disabled in 3D mode to avoid interfering with 3D orbit)
+  const handleMediaCanvasClick = () => {
+    if (stage === '3d') return;
+    const now = Date.now();
+    const DOUBLE_TAP_DELAY = 280;
+    if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
+      if (!isLiked) {
+        toggleLikeItem(item);
+      }
+      setShowHeartBurst(true);
+      setTimeout(() => setShowHeartBurst(false), 750);
+    }
+    lastTapRef.current = now;
+  };
+
+  const handleMediaTouchStart = (e: React.TouchEvent) => {
+    if (stage === '3d') return;
+    const touch = e.touches[0];
+    if (!touch) return;
+    touchStartXRef.current = touch.clientX;
+    touchStartYRef.current = touch.clientY;
+  };
+
+  const handleMediaTouchEnd = (e: React.TouchEvent) => {
+    if (
+      stage === '3d' ||
+      touchStartXRef.current === null ||
+      touchStartYRef.current === null
+    ) {
+      return;
+    }
+    const touch = e.changedTouches[0];
+    if (!touch) return;
+    const deltaX = touch.clientX - touchStartXRef.current;
+    const deltaY = touch.clientY - touchStartYRef.current;
+
+    if (Math.abs(deltaX) > 48 && Math.abs(deltaX) > Math.abs(deltaY) * 1.4) {
+      if (deltaX < 0) {
+        const nextIdx = (currentStageIndex + 1) % stagesOrder.length;
+        const target = stagesOrder[nextIdx];
+        if (target) switchStage(target);
+      } else {
+        const prevIdx =
+          (currentStageIndex - 1 + stagesOrder.length) % stagesOrder.length;
+        const target = stagesOrder[prevIdx];
+        if (target) switchStage(target);
+      }
+    }
+    touchStartXRef.current = null;
+    touchStartYRef.current = null;
+  };
+
+  const handleToggleDetails = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const nextState = !showDetails;
+    setShowDetails(nextState);
+    if (nextState) {
+      trackEvent('allergen_expand', item.id);
+    }
+  };
+
+  const handleToggleOrderSelection = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isSelected) {
+      removeItemFromSelection(item, true);
+    } else {
+      addItemToSelection(item);
+    }
+  };
+
+  const handleVideoTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+    const v = e.currentTarget;
+    if (!v.duration || Number.isNaN(v.duration)) return;
+    const progress = v.currentTime / v.duration;
+    if (progress < 0.25) {
+      setVideoStepLabel('Etapa 1/4 • Preparo da Base');
+    } else if (progress < 0.5) {
+      setVideoStepLabel('Etapa 2/4 • Cocção Artesanal');
+    } else if (progress < 0.75) {
+      setVideoStepLabel('Etapa 3/4 • Montagem & Textura');
+    } else {
+      setVideoStepLabel('Etapa 4/4 • Finalização do Chef');
+    }
+  };
+
+  const primaryBadge = item.badges.includes('Mais Pedido')
+    ? 'BEST SELLER'
+    : item.badges[0]?.toUpperCase();
+
   return (
     <article
-      ref={cardRef as React.RefObject<HTMLElement>}
-      data-menu-item-id={item.id}
+      ref={elementRef}
+      data-item-id={item.id}
       className={cn(
-        'relative w-full h-[76dvh] min-h-[470px] max-h-[650px] scroll-mt-28 rounded-3xl overflow-hidden bg-[#161616] select-none mb-5 will-change-transform transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]',
-        isVisibleInViewport
-          ? isLight
-            ? 'scale-100 opacity-100 shadow-[0_22px_50px_rgba(20,20,19,0.22)] ring-1 ring-black/15'
-            : 'scale-100 opacity-100 shadow-2xl ring-1 ring-white/15'
-          : isLight
-            ? 'scale-[0.975] opacity-85 shadow-md ring-1 ring-black/10'
-            : 'scale-[0.975] opacity-80 shadow-lg ring-1 ring-white/[0.06]'
+        'relative w-full h-[79dvh] min-h-[520px] max-h-[760px] snap-center shrink-0 my-2.5 rounded-3xl overflow-hidden bg-[#141414] border border-white/[0.1] select-none shadow-2xl flex flex-col justify-between transition-transform duration-300 ease-out'
       )}
-      onClick={handleMediaClick}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
     >
-      {/* MEDIA LAYER (Full-bleed 9:16 inside the rounded-3xl card) */}
-      {activeMedia?.type === 'video' && !videoError ? (
-        <video
-          ref={videoRef}
-          src={activeMedia.url}
-          poster={activeMedia.poster}
-          muted
-          loop
-          playsInline
-          preload={priorityLoad ? 'auto' : 'metadata'}
-          onTimeUpdate={handleVideoTimeUpdate}
-          onError={() => setVideoError(true)}
-          onEnded={() => trackEvent('video_replay', item.id)}
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out"
-        />
-      ) : (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          key={activeMedia?.id}
-          src={activeMedia?.poster || activeMedia?.url}
-          alt={activeMedia?.alt || item.name}
-          loading={priorityLoad ? 'eager' : 'lazy'}
-          className="absolute inset-0 h-full w-full object-cover animate-fadeIn"
-        />
-      )}
+      {/* CAMADA DE MÍDIA (1. FOTO -> 2. VÍDEO -> 3. 3D/AR) */}
+      <div
+        className="absolute inset-0 z-0 bg-[#0F0F0F]"
+        onClick={handleMediaCanvasClick}
+        onTouchStart={handleMediaTouchStart}
+        onTouchEnd={handleMediaTouchEnd}
+      >
+        {stage === 'photo' && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={primaryPhoto.url}
+            alt={primaryPhoto.alt || item.name}
+            loading="eager"
+            className="h-full w-full object-cover object-center transition-opacity duration-300"
+          />
+        )}
 
-      {/* Subtle Top Vignette for Story Bars & Badge */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/60 to-transparent z-10" />
+        {stage === 'video' && primaryVideo && !videoFailed && (
+          <video
+            ref={videoRef}
+            key={primaryVideo.url}
+            src={primaryVideo.url}
+            poster={primaryVideo.poster || primaryPhoto.url}
+            muted
+            loop
+            playsInline
+            autoPlay
+            preload="metadata"
+            onTimeUpdate={handleVideoTimeUpdate}
+            onError={() => setVideoFailed(true)}
+            className="h-full w-full object-cover object-center"
+          />
+        )}
 
-      {/* TOP INTERNAL BAR: Instagram Stories Progress Bars + Floating Badge */}
-      <div className="absolute top-0 inset-x-0 z-20 p-4 space-y-3">
-        {/* Story Progress Bars (shows real-time playback progress on video slide) */}
-        {mediaList.length > 1 && (
-          <div
-            className="flex items-center gap-1.5"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {mediaList.map((media, idx) => {
-              const isCurrent = idx === currentMediaIndex;
-              const isPast = idx < currentMediaIndex;
-              const barWidth = isCurrent
-                ? media.type === 'video' && videoProgressPct > 0
-                  ? `${videoProgressPct}%`
-                  : '100%'
-                : isPast
-                  ? '100%'
-                  : '0%';
+        {stage === 'video' && (!primaryVideo || videoFailed) && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={primaryPhoto.url}
+            alt={item.name}
+            className="h-full w-full object-cover object-center"
+          />
+        )}
 
-              return (
-                <button
-                  key={media.id}
-                  type="button"
-                  aria-label={`Mídia ${idx + 1}`}
-                  onClick={() => {
-                    setCurrentMediaIndex(idx);
-                    trackEvent('media_swipe', item.id, null, { media_index: idx });
-                  }}
-                  className="h-1 flex-1 rounded-full bg-white/30 overflow-hidden transition-all"
-                >
-                  <div
-                    style={{ width: barWidth }}
-                    className="h-full rounded-full bg-white transition-[width] duration-150 ease-linear"
-                  />
-                </button>
-              );
-            })}
+        {stage === '3d' && (
+          <div className="h-full w-full">
+            <DishARViewer
+              modelGlbUrl={modelGlbUrl}
+              modelUsdzUrl={item.model_usdz_url}
+              posterUrl={primaryPhoto.url}
+              itemName={item.name}
+              arScaleFixed={item.ar_scale_fixed ?? true}
+              dimensionsCm={item.dimensions_cm}
+              fillContainer={true}
+              showBuiltInButton={false}
+              onRotate3D={() =>
+                trackEvent('3d_rotate', item.id, null, {
+                  price_cents: item.price_cents,
+                })
+              }
+              onActivateAR={() =>
+                trackEvent('ar_table_view', item.id, null, {
+                  price_cents: item.price_cents,
+                })
+              }
+              onDesktopFallbackNeeded={() => setShowARModal(true)}
+            />
           </div>
         )}
 
-        {/* Top-Left Floating Badge (MAIS PEDIDO / NOVIDADE / SUGESTÃO DO CHEF) + Selo 3D / AR */}
+        {/* Gradiente suave apenas no topo e rodapé para leitura limpa */}
         <div
-          className="flex items-center justify-between gap-2"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex items-center gap-1.5">
-            {primaryBadge && (
-              <span className="bg-black/70 text-white text-[10px] font-medium uppercase tracking-wider px-3 py-1 rounded-full backdrop-blur-md">
-                {primaryBadge}
-              </span>
-            )}
+          className={cn(
+            'pointer-events-none absolute inset-0 transition-opacity duration-300',
+            stage === '3d'
+              ? 'bg-gradient-to-t from-black/95 via-black/30 to-black/50'
+              : 'bg-gradient-to-t from-black/95 via-black/45 to-black/35'
+          )}
+        />
 
-            {item.model_glb_url && (
+        {/* Animação de Like no Duplo Toque */}
+        {showHeartBurst && (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center z-30">
+            <Heart className="w-24 h-24 text-white fill-rose-500 animate-ping opacity-90 drop-shadow-lg" />
+          </div>
+        )}
+      </div>
+
+      {/* SETAS LATERAIS DISCRETAS (SOMENTE NO MEIO DO CARD, LONGE DOS BOTÕES) */}
+      <button
+        type="button"
+        onClick={handlePrevStage}
+        aria-label="Apresentação anterior"
+        className="absolute left-2.5 top-[38%] -translate-y-1/2 z-20 h-9 w-9 rounded-full bg-black/55 hover:bg-black/80 border border-white/20 backdrop-blur-md flex items-center justify-center text-white active:scale-90 transition-all shadow-lg keep-white"
+      >
+        <ChevronLeft className="w-4 h-4" />
+      </button>
+      <button
+        type="button"
+        onClick={handleNextStage}
+        aria-label="Próxima apresentação"
+        className="absolute right-2.5 top-[38%] -translate-y-1/2 z-20 h-9 w-9 rounded-full bg-black/55 hover:bg-black/80 border border-white/20 backdrop-blur-md flex items-center justify-center text-white active:scale-90 transition-all shadow-lg keep-white"
+      >
+        <ChevronRight className="w-4 h-4" />
+      </button>
+
+      {/* TOPO INTERNO DO CARD: BARRAS + SELETOR 1. FOTO | 2. VÍDEO | 3. 3D/AR + LIKE */}
+      <div className="relative z-20 pt-3.5 px-4 space-y-2.5">
+        {/* Barras Horizontais de Progresso (3 etapas) */}
+        <div className="flex items-center gap-1.5">
+          {stagesOrder.map((st) => (
+            <button
+              key={st}
+              type="button"
+              onClick={(e) => switchStage(st, e)}
+              aria-label={`Modo ${st}`}
+              className={cn(
+                'h-1 flex-1 rounded-full transition-all duration-300',
+                st === stage ? 'bg-white' : 'bg-white/30 hover:bg-white/50'
+              )}
+            />
+          ))}
+        </div>
+
+        {/* Linha de Controles do Topo: Seletor (Foto -> Vídeo -> 3D/AR) à esquerda + Curtir à direita */}
+        <div className="flex items-center justify-between gap-2">
+          {/* Pílulas de Ordem de Apresentação: 1. Foto | 2. Vídeo | 3. 3D/AR */}
+          <div className="inline-flex items-center gap-1 p-1 rounded-full bg-black/75 border border-white/15 backdrop-blur-xl shadow-lg">
+            <button
+              type="button"
+              onClick={(e) => switchStage('photo', e)}
+              className={cn(
+                'px-2.5 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1 transition-all',
+                stage === 'photo'
+                  ? 'bg-white text-[#0F0F0F] shadow'
+                  : 'text-zinc-200 hover:text-white keep-white'
+              )}
+            >
+              <ImageIcon className="w-3 h-3" />
+              <span>1. Foto</span>
+            </button>
+
+            {primaryVideo && (
               <button
                 type="button"
-                onClick={() => setIsArModalOpen(true)}
-                className="bg-blue-600/90 hover:bg-blue-500 text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full backdrop-blur-md flex items-center gap-1 shadow-md transition-all active:scale-95"
+                onClick={(e) => switchStage('video', e)}
+                className={cn(
+                  'px-2.5 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1 transition-all',
+                  stage === 'video'
+                    ? 'bg-amber-400 text-[#0F0F0F] shadow font-bold'
+                    : 'text-zinc-200 hover:text-white keep-white'
+                )}
               >
-                <Box className="w-3 h-3" />
-                <span>3D / AR</span>
+                <Play className="w-3 h-3 fill-current" />
+                <span>2. Vídeo</span>
               </button>
             )}
+
+            <button
+              type="button"
+              onClick={(e) => switchStage('3d', e)}
+              className={cn(
+                'px-2.5 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1 transition-all',
+                stage === '3d'
+                  ? 'bg-blue-600 text-white shadow keep-white'
+                  : 'text-blue-300 hover:text-white keep-white'
+              )}
+            >
+              <Box className="w-3 h-3" />
+              <span>3. 3D / AR</span>
+            </button>
           </div>
 
-          {!item.is_available && (
-            <span className="bg-rose-950/85 text-rose-200 border border-rose-500/30 text-[10px] font-semibold uppercase tracking-wider px-3 py-1 rounded-full backdrop-blur-md">
-              Esgotado
+          {/* Botão de Curtir no Topo Direito (Zero conflito com preço ou botões inferiores!) */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleLikeItem(item);
+            }}
+            aria-label={isLiked ? 'Remover curtida' : 'Curtir prato'}
+            className={cn(
+              'px-3 py-1.5 rounded-full flex items-center gap-1.5 border backdrop-blur-xl transition-all active:scale-90 keep-white',
+              isLiked
+                ? 'bg-rose-500/90 border-rose-400 text-white shadow-lg shadow-rose-500/25'
+                : 'bg-black/65 border-white/15 text-white hover:bg-black/80'
+            )}
+          >
+            <Heart
+              className={cn('w-3.5 h-3.5', isLiked && 'fill-white text-white')}
+            />
+            <span className="text-[11px] font-bold">
+              {(item.likes_initial_count ?? 120) + (isLiked ? 1 : 0)}
             </span>
+          </button>
+        </div>
+
+        {/* Sub-linha de Status: Selo Best Seller ou Etapa do Vídeo */}
+        <div className="flex items-center justify-between gap-2 pointer-events-none">
+          {stage === 'video' ? (
+            <span className="bg-amber-400 text-[#0F0F0F] text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full backdrop-blur-md flex items-center gap-1.5 shadow">
+              <Play className="w-2.5 h-2.5 fill-current" />
+              <span>{videoStepLabel}</span>
+            </span>
+          ) : primaryBadge ? (
+            <span className="bg-black/70 text-white text-[10px] font-semibold uppercase tracking-wider px-3 py-1 rounded-full backdrop-blur-md border border-white/10 keep-white">
+              {primaryBadge}
+            </span>
+          ) : (
+            <span />
+          )}
+
+          {stage === '3d' && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowARModal(true);
+              }}
+              className="pointer-events-auto bg-blue-600/90 hover:bg-blue-500 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full backdrop-blur-md flex items-center gap-1 shadow-lg keep-white"
+            >
+              <Maximize2 className="w-3 h-3" />
+              <span>Tela Cheia / AR</span>
+            </button>
           )}
         </div>
       </div>
 
-      {/* Double-Tap Heart Feedback */}
-      {showDoubleTapHeart && (
-        <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center">
-          <div className="animate-heart-pop rounded-full bg-black/40 p-5 backdrop-blur-md">
-            <Heart className="w-16 h-16 text-white fill-white" />
-          </div>
-        </div>
-      )}
-
-      {/* BOTTOM INTERNAL FOOTER (Gradient Overlay - always high contrast white over dark photo vignette) */}
+      {/* RODAPÉ INTERNO DO CARD (SEM SOBREPOSIÇÃO DE BOTÕES!) */}
       <div
-        className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/95 via-black/70 to-transparent pt-20 pb-5 px-5 flex flex-col justify-end"
+        className="relative z-20 pt-8 pb-4 px-4 space-y-2.5 keep-white"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Expandable Allergens & Ingredients Popover Sheet */}
-        {isAllergensExpanded && (
-          <div className="mb-3.5 p-3.5 rounded-2xl bg-black/85 backdrop-blur-xl border border-white/15 text-xs space-y-2 animate-fadeIn">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400">
-                Alergênicos & Ingredientes
-              </span>
-              <button
-                type="button"
-                onClick={() => setIsAllergensExpanded(false)}
-                className="text-zinc-400 hover:text-white p-0.5"
-                aria-label="Fechar alergênicos"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
+        {/* Metadados Rápidos */}
+        <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-zinc-300">
+          {item.prep_time_minutes && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/[0.12] backdrop-blur-md text-zinc-100">
+              <Clock className="w-3 h-3" />
+              {item.prep_time_minutes} min
+            </span>
+          )}
+          {item.calories && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/[0.12] backdrop-blur-md text-zinc-100">
+              <Flame className="w-3 h-3" />
+              {item.calories} kcal
+            </span>
+          )}
+          {item.pairing_suggestion && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/20 border border-amber-400/30 text-amber-200 truncate max-w-[215px]">
+              <Utensils className="w-3 h-3 shrink-0 text-amber-300" />
+              <span className="truncate">{item.pairing_suggestion}</span>
+            </span>
+          )}
+        </div>
 
-            <div className="flex flex-wrap gap-1.5">
-              {item.allergens.map((allergen) => (
-                <span
-                  key={allergen}
-                  className="px-2 py-0.5 rounded-full bg-white/[0.12] text-white text-[11px]"
-                >
-                  {allergen}
+        {/* Linha 1: Título Serifado + Preço Alinhado (Zero sobreposição!) */}
+        <div className="flex items-start justify-between gap-3">
+          <h2 className="font-serif text-2xl sm:text-[26px] text-white leading-tight tracking-tight drop-shadow-sm flex-1 keep-white">
+            {item.name}
+          </h2>
+          <div className="shrink-0 text-right bg-black/65 border border-white/15 px-3 py-1.5 rounded-2xl backdrop-blur-md">
+            <span className="block text-[9px] uppercase tracking-widest text-zinc-300">
+              Valor
+            </span>
+            <span className="text-base sm:text-lg font-bold text-amber-400 whitespace-nowrap">
+              {formatCurrencyBRL(item.price_cents)}
+            </span>
+          </div>
+        </div>
+
+        {/* Linha 2: Descrição + Botão compacto de Alergênicos */}
+        <div className="flex items-end justify-between gap-2">
+          <p
+            className={cn(
+              'text-xs text-zinc-200 leading-relaxed flex-1',
+              !showDetails && 'line-clamp-2'
+            )}
+          >
+            {item.description}
+          </p>
+          <button
+            type="button"
+            onClick={handleToggleDetails}
+            className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.12] hover:bg-white/[0.18] border border-white/15 text-[11px] font-medium text-zinc-100 transition-colors"
+          >
+            <AlertTriangle className="w-3 h-3 text-amber-300" />
+            <span>Ficha</span>
+            {showDetails ? (
+              <ChevronUp className="w-3 h-3" />
+            ) : (
+              <ChevronDown className="w-3 h-3" />
+            )}
+          </button>
+        </div>
+
+        {/* Painel Expansível: Alergênicos e Ingredientes */}
+        {showDetails && (
+          <div className="p-3 rounded-2xl bg-black/85 backdrop-blur-xl border border-white/15 space-y-2.5 animate-fade-in">
+            {item.allergens.length > 0 && (
+              <div>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-300 block mb-1">
+                  Aviso de Alergênicos
                 </span>
-              ))}
-            </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {item.allergens.map((allergen) => (
+                    <span
+                      key={allergen}
+                      className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-amber-500/20 text-amber-200 border border-amber-400/30"
+                    >
+                      {allergen}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {item.ingredients.length > 0 && (
-              <p className="text-[11px] text-[#D4D4D8] leading-relaxed pt-1 border-t border-white/10">
-                {item.ingredients.join(' • ')}
-              </p>
+              <div>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-300 block mb-1 flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-white" />
+                  Ingredientes Frescos
+                </span>
+                <p className="text-xs text-zinc-200 leading-relaxed">
+                  {item.ingredients.join(' • ')}
+                </p>
+              </div>
             )}
           </div>
         )}
 
-        {/* Line 1: Editorial Serif Title */}
-        <h2 className="font-serif text-3xl text-white font-normal tracking-tight leading-[1.12] drop-shadow-sm">
-          {item.name}
-        </h2>
+        {/* Linha 3: Barra Dupla de Ação (Ver na Mesa 3D/AR + Adicionar ao Pedido) - ZERO CONFLITO */}
+        <div className="grid grid-cols-12 gap-2 pt-1">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowARModal(true);
+            }}
+            className="col-span-5 py-3 px-3 rounded-2xl bg-blue-600 hover:bg-blue-500 active:scale-[0.98] border border-blue-400/40 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-lg shadow-blue-600/25 transition-all keep-white"
+          >
+            <Camera className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Ver na Mesa</span>
+          </button>
 
-        {/* Line 2: Description of ingredients */}
-        <p className="mt-1.5 text-xs text-zinc-200 line-clamp-2 leading-relaxed">
-          {item.description}
-        </p>
-
-        {/* Line 3 (Base): Price on left + ALERGÊNICOS v + Botão "Ver na sua mesa" + Circular Favorite button */}
-        <div className="mt-4 pt-1 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-3.5 min-w-0">
-            <span className="text-base font-medium text-white tracking-tight shrink-0">
-              {formatCurrencyBRL(item.price_cents)}
-            </span>
-
-            <button
-              type="button"
-              onClick={handleToggleAllergens}
-              aria-expanded={isAllergensExpanded}
-              className="text-[11px] uppercase tracking-widest text-zinc-300 hover:text-white flex items-center gap-1 transition-colors py-1 shrink-0"
-            >
-              <span>Alergênicos</span>
-              <ChevronDown
-                className={cn(
-                  'w-3.5 h-3.5 transition-transform duration-200',
-                  isAllergensExpanded && 'rotate-180 text-white'
-                )}
-              />
-            </button>
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            {item.model_glb_url && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsArModalOpen(true);
-                }}
-                className="px-3 py-2 rounded-full bg-blue-600/90 hover:bg-blue-500 text-white text-[11px] font-semibold flex items-center gap-1.5 shadow-lg shadow-blue-600/30 backdrop-blur-md transition-all active:scale-95"
-              >
-                <Box className="w-3.5 h-3.5" />
-                <span>Ver na sua mesa</span>
-                <Camera className="w-3 h-3 opacity-80" />
-              </button>
+          <button
+            type="button"
+            onClick={handleToggleOrderSelection}
+            className={cn(
+              'col-span-7 py-3 px-4 rounded-2xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] shadow-lg',
+              isSelected
+                ? 'bg-emerald-500 text-white keep-white'
+                : 'bg-amber-400 hover:bg-amber-300 text-[#0F0F0F]'
             )}
-
-            {/* Right Circular Favorite / Add Button */}
-            <button
-              type="button"
-              disabled={!item.is_available}
-              onClick={handleToggleFavoriteAction}
-              aria-label={
-                isSaved ? 'Remover dos favoritos' : 'Adicionar aos favoritos'
-              }
-              className={cn(
-                'w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 shrink-0',
-                isSaved
-                  ? 'bg-white text-[#0F0F0F] border border-white shadow-md animate-heart-pop'
-                  : 'bg-white/[0.14] border border-white/20 text-white backdrop-blur-md hover:bg-white/[0.22]'
-              )}
-            >
-              <Heart
-                className={cn(
-                  'w-4 h-4 transition-colors',
-                  isSaved ? 'fill-[#0F0F0F] text-[#0F0F0F]' : 'text-white'
-                )}
-              />
-            </button>
-          </div>
+          >
+            {isSelected ? (
+              <>
+                <Check className="w-4 h-4 shrink-0 stroke-[2.5]" />
+                <span className="truncate">
+                  No Pedido ({selectedQuantity}x)
+                </span>
+              </>
+            ) : (
+              <>
+                <Plus className="w-4 h-4 shrink-0 stroke-[2.5]" />
+                <span className="truncate">Pedir / Favoritar</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
 
-      {/* Modal 3D / Realidade Aumentada 1:1 ("Ver na sua mesa") */}
-      {item.model_glb_url && (
-        <ProductARModal
-          item={item}
-          isOpen={isArModalOpen}
-          onClose={() => setIsArModalOpen(false)}
-        />
-      )}
+      {/* Modal Dedicado 3D / WebAR ("Ver na sua mesa" em Escala Real 1:1) */}
+      <ProductARModal
+        item={{
+          ...item,
+          model_glb_url: modelGlbUrl,
+        }}
+        isOpen={showARModal}
+        onClose={() => setShowARModal(false)}
+      />
     </article>
   );
 }

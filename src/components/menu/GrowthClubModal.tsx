@@ -1,196 +1,174 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
-  Award,
-  CheckCircle2,
+  Check,
+  Copy,
   ExternalLink,
   Gift,
   Instagram,
   MessageSquareHeart,
-  ShieldCheck,
   Sparkles,
   Star,
   TicketPercent,
   X,
 } from 'lucide-react';
-import type { ClubMissionId, GrowthClubConfig } from '@/types/database';
-import { useMenuSession } from '@/context/MenuSessionContext';
+import type { ClubMissionId, Restaurant } from '@/types/database';
 import {
-  type ActiveCustomerCoupon,
-  getActiveCustomerCoupon,
-  GROWTH_CLUB_UPDATED_EVENT,
-  loadGrowthClubConfig,
   registerClubMissionCompletion,
   submitCustomerReview,
 } from '@/lib/storage/growthClubStorage';
+import { useTheme } from '@/context/ThemeContext';
 import { cn } from '@/lib/utils';
 
 interface GrowthClubModalProps {
+  restaurant: Restaurant;
   isOpen: boolean;
-  initialTab?: 'review' | 'club';
   onClose: () => void;
+  initialTab?: 'review' | 'club';
 }
 
+interface ClubMission {
+  id: string;
+  missionKey: ClubMissionId;
+  title: string;
+  subtitle: string;
+  rewardBadge: string;
+  discountPercent: number;
+  couponCode: string;
+  actionLabel: string;
+  actionType: 'instagram' | 'google' | 'checkin';
+}
+
+const DEFAULT_MISSIONS: ClubMission[] = [
+  {
+    id: 'mission-insta-story',
+    missionKey: 'instagram_story',
+    title: 'Postar Story do Prato no Instagram',
+    subtitle: 'Marque @nomadepadaria no seu Story mostrando sua escolha na mesa.',
+    rewardBadge: '12% OFF + Café Cortesia',
+    discountPercent: 12,
+    couponCode: 'INSTAVIP12',
+    actionLabel: 'Abrir Instagram (@nomadepadaria)',
+    actionType: 'instagram',
+  },
+  {
+    id: 'mission-google-5stars',
+    missionKey: 'google_review',
+    title: 'Avaliação 5 Estrelas no Google',
+    subtitle: 'Conte como foi sua experiência e ajude nosso restaurante a crescer.',
+    rewardBadge: '10% OFF na Comanda Hoje',
+    discountPercent: 10,
+    couponCode: 'GOOGLEVIP10',
+    actionLabel: 'Avaliar no Google Agora',
+    actionType: 'google',
+  },
+  {
+    id: 'mission-club-checkin',
+    missionKey: 'vip_whatsapp',
+    title: 'Cadastro Rápido no Clube da Casa',
+    subtitle: 'Receba convites de fornadas especiais e descontos de aniversariante.',
+    rewardBadge: '15% OFF Desbloqueado Hoje',
+    discountPercent: 15,
+    couponCode: 'CLUBENOMADE15',
+    actionLabel: 'Ativar Meu Passaporte VIP',
+    actionType: 'checkin',
+  },
+];
+
 export function GrowthClubModal({
+  restaurant,
   isOpen,
-  initialTab = 'club',
   onClose,
+  initialTab = 'club',
 }: GrowthClubModalProps) {
-  const { sessionOrigin, trackEvent } = useMenuSession();
-  const [config, setConfig] = useState<GrowthClubConfig>(loadGrowthClubConfig());
-  const [activeTab, setActiveTab] = useState<'review' | 'club'>(initialTab);
-
-  // Review state
+  const { isLight } = useTheme();
+  const [activeTab, setActiveTab] = useState<'club' | 'review'>(initialTab);
   const [rating, setRating] = useState<number>(5);
-  const [reviewComment, setReviewComment] = useState('');
-  const [customerName, setCustomerName] = useState('');
+  const [feedbackText, setFeedbackText] = useState('');
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  const [unlockedMissions, setUnlockedMissions] = useState<string[]>([]);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [customerWhatsapp, setCustomerWhatsapp] = useState('');
-  const [reviewSubmitted, setReviewSubmitted] = useState(false);
-
-  // Club state
-  const [activeCoupon, setActiveCoupon] = useState<ActiveCustomerCoupon | null>(
-    null
-  );
-  const [selectedMissionId, setSelectedMissionId] =
-    useState<ClubMissionId>('google_review');
-
-  useEffect(() => {
-    const sync = () => {
-      const loaded = loadGrowthClubConfig();
-      setConfig(loaded);
-      setActiveCoupon(getActiveCustomerCoupon());
-      if (!loaded.clubModuleEnabled && activeTab === 'club') {
-        setActiveTab('review');
-      }
-    };
-    sync();
-    window.addEventListener(GROWTH_CLUB_UPDATED_EVENT, sync);
-    return () => window.removeEventListener(GROWTH_CLUB_UPDATED_EVENT, sync);
-  }, [activeTab]);
-
-  useEffect(() => {
-    if (isOpen) {
-      setActiveCoupon(getActiveCustomerCoupon());
-      if (!config.clubModuleEnabled) {
-        setActiveTab('review');
-      } else {
-        setActiveTab(initialTab);
-      }
-    }
-  }, [isOpen, initialTab, config.clubModuleEnabled]);
 
   if (!isOpen) return null;
 
-  const tableLabel =
-    sessionOrigin.locationLabel.split('•')[0]?.trim() || 'Mesa 04';
+  const googleReviewUrl =
+    restaurant.google_review_url ||
+    `https://search.google.com/local/writereview?placeid=ChIJ_XploreMenuDemo`;
+  const instagramUrl = `https://instagram.com/${(
+    restaurant.instagram_handle || 'nomadepadaria'
+  ).replace('@', '')}`;
 
-  const handleReviewSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const isPromoter = rating >= 4;
-
-    submitCustomerReview({
-      tableLabel,
-      rating,
-      comment:
-        reviewComment.trim() ||
-        (isPromoter
-          ? 'Experiência excelente na mesa!'
-          : 'Feedback enviado à gerência.'),
-      customerName: customerName.trim() || undefined,
-      customerPhone: customerWhatsapp.trim() || undefined,
-      redirectedToGoogle: isPromoter,
-      sharedOnInstagram: isPromoter,
-    });
-
-    trackEvent('review_submitted', null, null, {
-      rating,
-      location: tableLabel,
-    });
-
-    // Se o módulo de Clube estiver ativo e o cliente avaliou, já desbloqueia a missão de avaliação!
-    if (config.clubModuleEnabled) {
-      const reviewMission = config.missions.find(
-        (m) => m.id === 'google_review' && m.enabled
-      );
-      if (reviewMission) {
-        const coupon = registerClubMissionCompletion({
-          name: customerName.trim() || 'Cliente Avaliador',
-          whatsapp: customerWhatsapp.trim() || 'Avaliação na Mesa',
-          tableLabel,
-          missionId: 'google_review',
-          couponCode: reviewMission.couponCode,
-          discountPercent: reviewMission.discountPercent,
-          rewardLabel: reviewMission.rewardLabel,
-        });
-        setActiveCoupon(coupon);
-      }
+  const handleUnlockMission = (mission: ClubMission) => {
+    if (!unlockedMissions.includes(mission.id)) {
+      setUnlockedMissions((prev) => [...prev, mission.id]);
     }
-
-    setReviewSubmitted(true);
-  };
-
-  const handleCompleteMission = (missionId: ClubMissionId) => {
-    const mission = config.missions.find((m) => m.id === missionId);
-    if (!mission) return;
-
-    const coupon = registerClubMissionCompletion({
-      name: customerName.trim() || 'Membro Clube VIP',
-      whatsapp: customerWhatsapp.trim() || 'Validado via NFC',
-      tableLabel,
-      missionId: mission.id,
+    registerClubMissionCompletion({
+      name: 'Cliente da Mesa',
+      whatsapp: customerWhatsapp.trim() || 'Verificado na Mesa',
+      tableLabel: 'Mesa 04',
+      missionId: mission.missionKey,
       couponCode: mission.couponCode,
       discountPercent: mission.discountPercent,
-      rewardLabel: mission.rewardLabel,
+      rewardLabel: mission.rewardBadge,
     });
-
-    trackEvent('club_mission_completed', null, null, {
-      mission_id: mission.id,
-      discount_percent: mission.discountPercent,
-    });
-
-    setActiveCoupon(coupon);
-
-    // Open external target if Google or Instagram mission
-    if (missionId === 'google_review' && config.googleReviewUrl) {
-      window.open(config.googleReviewUrl, '_blank', 'noopener,noreferrer');
-    } else if (missionId === 'instagram_story') {
-      const cleanHandle = config.instagramHandle.replace(/^@/, '');
-      window.open(
-        `https://instagram.com/${cleanHandle}`,
-        '_blank',
-        'noopener,noreferrer'
-      );
+    if (mission.actionType === 'instagram') {
+      window.open(instagramUrl, '_blank', 'noopener,noreferrer');
+    } else if (mission.actionType === 'google') {
+      window.open(googleReviewUrl, '_blank', 'noopener,noreferrer');
     }
+  };
+
+  const handleCopyCoupon = (code: string) => {
+    navigator.clipboard?.writeText(code);
+    setCopiedCode(code);
+    setTimeout(() => setCopiedCode(null), 2000);
   };
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 backdrop-blur-md p-0 sm:p-4 animate-fade-in"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-[#161616] border-t sm:border border-white/15 shadow-2xl p-5 space-y-4 max-h-[90dvh] overflow-y-auto theme-adaptive"
+        className={cn(
+          'w-full max-w-[460px] rounded-t-3xl sm:rounded-3xl border p-5 sm:p-6 shadow-2xl max-h-[90dvh] overflow-y-auto transition-colors',
+          isLight
+            ? 'bg-[#F8F6F1] border-zinc-300 text-zinc-900'
+            : 'bg-[#161616] border-white/15 text-white'
+        )}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between gap-2">
+        {/* Cabeçalho */}
+        <div className="flex items-start justify-between gap-3 mb-4">
           <div className="flex items-center gap-2.5">
-            <span className="h-9 w-9 rounded-2xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center text-amber-400">
-              {config.clubModuleEnabled ? (
-                <Gift className="w-4 h-4" />
-              ) : (
-                <Star className="w-4 h-4" />
+            <div
+              className={cn(
+                'h-10 w-10 rounded-2xl flex items-center justify-center border',
+                isLight
+                  ? 'bg-amber-500/20 border-amber-500/40 text-amber-800'
+                  : 'bg-amber-500/20 border-amber-400/30 text-amber-400'
               )}
-            </span>
+            >
+              <Gift className="w-5 h-5" />
+            </div>
             <div>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400 block">
-                {tableLabel} • Experiência & Benefícios
+              <span
+                className={cn(
+                  'text-[10px] font-bold uppercase tracking-widest block',
+                  isLight ? 'text-amber-800' : 'text-amber-400'
+                )}
+              >
+                Clube de Benefícios & Avaliação
               </span>
-              <h3 className="font-serif text-xl text-white">
-                {config.clubModuleEnabled
-                  ? config.clubName
-                  : 'Avalie Nossa Casa'}
+              <h3
+                className={cn(
+                  'font-serif text-xl leading-tight',
+                  isLight ? 'text-zinc-900' : 'text-white'
+                )}
+              >
+                {restaurant.name} VIP
               </h3>
             </div>
           </div>
@@ -198,334 +176,464 @@ export function GrowthClubModal({
           <button
             type="button"
             onClick={onClose}
-            className="h-8 w-8 rounded-full bg-white/10 text-zinc-400 hover:text-white flex items-center justify-center"
+            className={cn(
+              'h-8 w-8 rounded-full flex items-center justify-center transition-colors',
+              isLight
+                ? 'bg-zinc-200/80 text-zinc-700 hover:bg-zinc-300'
+                : 'bg-white/[0.08] text-zinc-400 hover:text-white'
+            )}
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Seletor de Abas (quando Clube de Descontos está ativo) */}
-        {config.clubModuleEnabled && (
-          <div className="grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-[#0F0F0F] border border-white/10">
-            <button
-              type="button"
-              onClick={() => setActiveTab('club')}
-              className={cn(
-                'py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all',
-                activeTab === 'club'
-                  ? 'bg-white text-[#0F0F0F]'
+        {/* Alternador de Abas: Clube de Descontos vs Avaliar Experiência */}
+        <div
+          className={cn(
+            'grid grid-cols-2 gap-1.5 p-1 rounded-2xl border mb-5',
+            isLight
+              ? 'bg-zinc-200/70 border-zinc-300/80'
+              : 'bg-[#0F0F0F] border-white/10'
+          )}
+        >
+          <button
+            type="button"
+            onClick={() => setActiveTab('club')}
+            className={cn(
+              'py-2.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all',
+              activeTab === 'club'
+                ? 'bg-amber-400 text-[#0F0F0F] shadow font-bold'
+                : isLight
+                  ? 'text-zinc-700 hover:text-zinc-950'
                   : 'text-zinc-400 hover:text-white'
-              )}
-            >
-              <TicketPercent className="w-3.5 h-3.5" />
-              <span>Clube de Descontos</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('review')}
-              className={cn(
-                'py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all',
-                activeTab === 'review'
-                  ? 'bg-white text-[#0F0F0F]'
-                  : 'text-zinc-400 hover:text-white'
-              )}
-            >
-              <Star className="w-3.5 h-3.5" />
-              <span>Avaliar Experiência</span>
-            </button>
-          </div>
-        )}
+            )}
+          >
+            <TicketPercent className="w-3.5 h-3.5" />
+            <span>Clube de Descontos</span>
+          </button>
 
-        {/* Banner de Cupom Ativo (se já desbloqueou) */}
-        {activeCoupon && (
-          <div className="p-3.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/35 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-              <div className="min-w-0">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300 block">
-                  Benefício Aplicado na sua Comanda
-                </span>
-                <p className="text-xs font-bold text-white truncate">
-                  {activeCoupon.rewardLabel} ({activeCoupon.couponCode})
-                </p>
-              </div>
+          <button
+            type="button"
+            onClick={() => setActiveTab('review')}
+            className={cn(
+              'py-2.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all',
+              activeTab === 'review'
+                ? 'bg-amber-400 text-[#0F0F0F] shadow font-bold'
+                : isLight
+                  ? 'text-zinc-700 hover:text-zinc-950'
+                  : 'text-zinc-400 hover:text-white'
+            )}
+          >
+            <Star className="w-3.5 h-3.5" />
+            <span>Avaliar & Instagram</span>
+          </button>
+        </div>
+
+        {/* ABA 1: CLUBE DE DESCONTOS POR AÇÃO */}
+        {activeTab === 'club' && (
+          <div className="space-y-3.5">
+            <div
+              className={cn(
+                'p-3.5 rounded-2xl border',
+                isLight
+                  ? 'bg-amber-100/80 border-amber-300 text-amber-950'
+                  : 'bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border-amber-400/25 text-zinc-200'
+              )}
+            >
+              <p className="text-xs leading-relaxed">
+                Realize uma das ações rápidas abaixo durante sua visita e{' '}
+                <strong
+                  className={cn(
+                    'font-bold',
+                    isLight ? 'text-amber-900' : 'text-amber-300'
+                  )}
+                >
+                  desbloqueie descontos ou cortesias na hora
+                </strong>{' '}
+                para apresentar ao garçom ou no caixa!
+              </p>
             </div>
-            <span className="px-2.5 py-1 rounded-full bg-emerald-400 text-[#0F0F0F] text-xs font-black shrink-0">
-              -{activeCoupon.discountPercent}%
-            </span>
-          </div>
-        )}
 
-        {/* ABA 1: CLUBE DE DESCONTOS GAMIFICADO (MÓDULO OPCIONAL) */}
-        {activeTab === 'club' && config.clubModuleEnabled && (
-          <div className="space-y-3.5 text-xs">
-            <p className="text-zinc-300 leading-relaxed">
-              Realize <strong>1 ação rápida</strong> abaixo para desbloquear seu
-              desconto imediato no pedido de hoje:
-            </p>
+            {DEFAULT_MISSIONS.map((mission) => {
+              const isUnlocked = unlockedMissions.includes(mission.id);
+              return (
+                <div
+                  key={mission.id}
+                  className={cn(
+                    'p-4 rounded-2xl border transition-all space-y-3',
+                    isUnlocked
+                      ? isLight
+                        ? 'bg-emerald-50 border-emerald-400 shadow-sm'
+                        : 'bg-emerald-500/10 border-emerald-400/40'
+                      : isLight
+                        ? 'bg-white border-zinc-200 shadow-sm'
+                        : 'bg-[#0F0F0F]/80 border-white/10'
+                  )}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <span
+                        className={cn(
+                          'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold mb-1.5 border',
+                          isLight
+                            ? 'bg-amber-100 text-amber-900 border-amber-300'
+                            : 'bg-amber-400/20 text-amber-300 border-amber-400/30'
+                        )}
+                      >
+                        <Sparkles className="w-2.5 h-2.5" />
+                        {mission.rewardBadge}
+                      </span>
+                      <h4
+                        className={cn(
+                          'text-sm font-bold',
+                          isLight ? 'text-zinc-900' : 'text-white'
+                        )}
+                      >
+                        {mission.title}
+                      </h4>
+                      <p
+                        className={cn(
+                          'text-xs mt-0.5 leading-relaxed',
+                          isLight ? 'text-zinc-600' : 'text-zinc-400'
+                        )}
+                      >
+                        {mission.subtitle}
+                      </p>
+                    </div>
+                  </div>
 
-            <div className="space-y-2.5">
-              {config.missions
-                .filter((m) => m.enabled)
-                .map((mission) => {
-                  const isSelected = selectedMissionId === mission.id;
-                  const isUnlocked =
-                    activeCoupon?.missionId === mission.id ||
-                    activeCoupon?.couponCode === mission.couponCode;
-
-                  return (
-                    <div
-                      key={mission.id}
-                      onClick={() => setSelectedMissionId(mission.id)}
+                  {mission.actionType === 'checkin' && !isUnlocked && (
+                    <input
+                      type="tel"
+                      value={customerWhatsapp}
+                      onChange={(e) => setCustomerWhatsapp(e.target.value)}
+                      placeholder="Seu WhatsApp com DDD (ex: 11 99999-9999)"
                       className={cn(
-                        'p-3.5 rounded-2xl border transition-all cursor-pointer space-y-2',
-                        isSelected
-                          ? 'bg-[#0F0F0F] border-amber-400/60 ring-1 ring-amber-400/30'
-                          : 'bg-[#0F0F0F]/60 border-white/10 hover:border-white/25'
+                        'w-full px-3.5 py-2.5 rounded-xl border text-xs focus:outline-none',
+                        isLight
+                          ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-amber-600'
+                          : 'bg-[#161616] border-white/10 text-white placeholder:text-zinc-500 focus:border-amber-400'
+                      )}
+                    />
+                  )}
+
+                  {!isUnlocked ? (
+                    <button
+                      type="button"
+                      onClick={() => handleUnlockMission(mission)}
+                      className={cn(
+                        'w-full py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all',
+                        isLight
+                          ? 'bg-zinc-900 hover:bg-zinc-800 text-white shadow'
+                          : 'bg-white/10 hover:bg-white/15 text-white'
                       )}
                     >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          {mission.id === 'google_review' && (
-                            <Star className="w-4 h-4 text-amber-400 shrink-0" />
+                      <span>{mission.actionLabel}</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </button>
+                  ) : (
+                    <div
+                      className={cn(
+                        'flex items-center justify-between gap-2 p-2.5 rounded-xl border',
+                        isLight
+                          ? 'bg-white border-emerald-400'
+                          : 'bg-[#0F0F0F] border-emerald-400/40'
+                      )}
+                    >
+                      <div>
+                        <span
+                          className={cn(
+                            'text-[10px] uppercase tracking-wider block font-bold',
+                            isLight ? 'text-emerald-700' : 'text-emerald-400'
                           )}
-                          {mission.id === 'instagram_story' && (
-                            <Instagram className="w-4 h-4 text-pink-400 shrink-0" />
+                        >
+                          Cupom Desbloqueado (Mostre ao Garçom)
+                        </span>
+                        <span
+                          className={cn(
+                            'font-mono text-sm font-bold tracking-wider',
+                            isLight ? 'text-zinc-900' : 'text-white'
                           )}
-                          {mission.id === 'vip_whatsapp' && (
-                            <Award className="w-4 h-4 text-emerald-400 shrink-0" />
-                          )}
-                          <span className="font-bold text-white text-xs">
-                            {mission.title}
-                          </span>
-                        </div>
-
-                        <span className="px-2 py-0.5 rounded-full bg-amber-400/20 border border-amber-400/40 text-amber-300 text-[10px] font-bold shrink-0">
-                          -{mission.discountPercent}% OFF
+                        >
+                          {mission.couponCode}
                         </span>
                       </div>
 
-                      <p className="text-[11px] text-[#A1A1AA] leading-relaxed">
-                        {mission.subtitle}
-                      </p>
-
-                      {isSelected && (
-                        <div className="pt-2 space-y-2 border-t border-white/10">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <input
-                              type="text"
-                              value={customerName}
-                              onChange={(e) => setCustomerName(e.target.value)}
-                              placeholder="Seu nome (opcional)"
-                              className="px-3 py-2 rounded-xl bg-[#161616] border border-white/10 text-white text-xs"
-                            />
-                            <input
-                              type="tel"
-                              value={customerWhatsapp}
-                              onChange={(e) =>
-                                setCustomerWhatsapp(e.target.value)
-                              }
-                              placeholder="Seu WhatsApp p/ cupom"
-                              className="px-3 py-2 rounded-xl bg-[#161616] border border-white/10 text-white text-xs"
-                            />
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCompleteMission(mission.id);
-                            }}
-                            className="w-full py-2.5 px-4 rounded-xl bg-white text-[#0F0F0F] font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-zinc-200 transition-all"
-                          >
-                            {isUnlocked ? (
-                              <>
-                                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                                <span>
-                                  Cupom {mission.couponCode} Já Desbloqueado!
-                                </span>
-                              </>
-                            ) : (
-                              <>
-                                <Sparkles className="w-4 h-4" />
-                                <span>
-                                  Realizar Ação & Desbloquear -{mission.discountPercent}%
-                                </span>
-                                <ExternalLink className="w-3.5 h-3.5" />
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleCopyCoupon(mission.couponCode)}
+                        className={cn(
+                          'px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 border',
+                          isLight
+                            ? 'bg-emerald-600 text-white border-emerald-700'
+                            : 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30'
+                        )}
+                      >
+                        {copiedCode === mission.couponCode ? (
+                          <>
+                            <Check className="w-3.5 h-3.5" />
+                            <span>Copiado</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5" />
+                            <span>Copiar</span>
+                          </>
+                        )}
+                      </button>
                     </div>
-                  );
-                })}
-            </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 
-        {/* ABA 2: FLUXO DE AVALIAÇÃO INTELIGENTE (GOOGLE ADS + INSTAGRAM + ESCUDO DE REPUTAÇÃO) */}
-        {(activeTab === 'review' || !config.clubModuleEnabled) && (
-          <div className="space-y-4 text-xs">
-            {!reviewSubmitted ? (
-              <form onSubmit={handleReviewSubmit} className="space-y-4">
-                <div className="p-4 rounded-2xl bg-[#0F0F0F] border border-white/10 text-center space-y-2.5">
-                  <span className="text-xs font-semibold text-zinc-300 block">
-                    Como está sendo sua experiência hoje na {tableLabel}?
-                  </span>
+        {/* ABA 2: FLUXO INTELIGENTE DE AVALIAÇÃO (GOOGLE MEU NEGÓCIO + INSTAGRAM) */}
+        {activeTab === 'review' && (
+          <div className="space-y-4">
+            <div
+              className={cn(
+                'p-4 rounded-2xl border text-center space-y-3',
+                isLight
+                  ? 'bg-white border-zinc-200 shadow-sm'
+                  : 'bg-[#0F0F0F]/80 border-white/10'
+              )}
+            >
+              <span
+                className={cn(
+                  'text-xs font-medium block',
+                  isLight ? 'text-zinc-600' : 'text-zinc-400'
+                )}
+              >
+                Como está sendo sua experiência hoje no {restaurant.name}?
+              </span>
 
-                  <div className="flex items-center justify-center gap-2 py-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        type="button"
-                        onClick={() => setRating(star)}
-                        className="p-1.5 rounded-full transition-transform active:scale-90"
-                      >
-                        <Star
-                          className={cn(
-                            'w-8 h-8 transition-colors',
-                            star <= rating
-                              ? 'fill-amber-400 text-amber-400'
-                              : 'text-zinc-600'
-                          )}
-                        />
-                      </button>
-                    ))}
-                  </div>
+              {/* Seletor de Estrelas Interativo */}
+              <div className="flex items-center justify-center gap-2 py-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => {
+                      setRating(star);
+                      setFeedbackSubmitted(false);
+                    }}
+                    className="p-1.5 rounded-xl transition-transform active:scale-90"
+                  >
+                    <Star
+                      className={cn(
+                        'w-8 h-8 transition-colors',
+                        star <= rating
+                          ? 'text-amber-400 fill-amber-400 drop-shadow'
+                          : isLight
+                            ? 'text-zinc-300'
+                            : 'text-zinc-700'
+                      )}
+                    />
+                  </button>
+                ))}
+              </div>
 
-                  <span className="inline-block px-3 py-1 rounded-full bg-white/10 text-[11px] font-semibold text-white">
-                    {rating === 5 && '5 Estrelas • Experiência Inesquecível!'}
-                    {rating === 4 && '4 Estrelas • Muito Bom!'}
-                    {rating === 3 && '3 Estrelas • Pode Melhorar'}
-                    {rating <= 2 && 'Precisamos resolver algo na sua mesa agora'}
-                  </span>
-                </div>
+              <span
+                className={cn(
+                  'text-xs font-bold block',
+                  isLight ? 'text-amber-800' : 'text-amber-300'
+                )}
+              >
+                {rating === 5 &&
+                  '😍 Excelente! Ficamos muito felizes que você amou!'}
+                {rating === 4 &&
+                  '😊 Muito bom! Sua avaliação nos ajuda a crescer!'}
+                {rating <= 3 &&
+                  '🙏 Obrigado pela sinceridade! Queremos resolver agora mesmo.'}
+              </span>
+            </div>
 
-                <div className="space-y-1.5">
-                  <label className="font-semibold text-zinc-300">
-                    {rating >= 4
-                      ? 'O que você mais gostou no prato ou atendimento?'
-                      : 'Conte diretamente para a gerência como podemos resolver agora:'}
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={reviewComment}
-                    onChange={(e) => setReviewComment(e.target.value)}
-                    placeholder={
-                      rating >= 4
-                        ? 'Ex: A Focaccia Burrata e o Pistachio Latte estavam perfeitos!'
-                        : 'Sua mensagem vai direto para o gerente em tempo real...'
-                    }
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#0F0F0F] border border-white/10 text-white"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <input
-                    type="text"
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    placeholder="Seu nome (opcional)"
-                    className="px-3.5 py-2.5 rounded-xl bg-[#0F0F0F] border border-white/10 text-white"
-                  />
-                  <input
-                    type="tel"
-                    value={customerWhatsapp}
-                    onChange={(e) => setCustomerWhatsapp(e.target.value)}
-                    placeholder="Seu WhatsApp (opcional)"
-                    className="px-3.5 py-2.5 rounded-xl bg-[#0F0F0F] border border-white/10 text-white"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-3.5 px-4 rounded-2xl bg-white text-[#0F0F0F] font-bold text-xs flex items-center justify-center gap-2 hover:bg-zinc-200 transition-all shadow-lg"
+            {/* Fluxo Inteligente: 4 ou 5 estrelas -> Direciona para Google Reviews & Instagram */}
+            {rating >= 4 ? (
+              <div className="space-y-3">
+                <div
+                  className={cn(
+                    'p-4 rounded-2xl border space-y-3',
+                    isLight
+                      ? 'bg-emerald-50 border-emerald-300'
+                      : 'bg-emerald-500/10 border-emerald-400/30'
+                  )}
                 >
-                  <MessageSquareHeart className="w-4 h-4" />
-                  <span>
-                    {rating >= 4
-                      ? config.clubModuleEnabled
-                        ? 'Enviar Avaliação & Ganhar 10% OFF'
-                        : 'Enviar Avaliação Positiva'
-                      : 'Enviar Alerta Direto à Gerência'}
-                  </span>
-                </button>
-              </form>
+                  <div className="flex items-center gap-2">
+                    <Star className="w-4 h-4 text-amber-500 fill-amber-400 shrink-0" />
+                    <h4
+                      className={cn(
+                        'text-sm font-bold',
+                        isLight ? 'text-zinc-900' : 'text-white'
+                      )}
+                    >
+                      Publicar 5 Estrelas no Google (30 segundos)
+                    </h4>
+                  </div>
+                  <p
+                    className={cn(
+                      'text-xs leading-relaxed',
+                      isLight ? 'text-zinc-700' : 'text-zinc-300'
+                    )}
+                  >
+                    Sua nota no Google destaca nossos pratos nas buscas da
+                    região e libera seu cupom{' '}
+                    <strong
+                      className={cn(
+                        'font-bold',
+                        isLight ? 'text-emerald-800' : 'text-emerald-300'
+                      )}
+                    >
+                      GOOGLEVIP12
+                    </strong>
+                    .
+                  </p>
+                  <a
+                    href={googleReviewUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() =>
+                      DEFAULT_MISSIONS[1] &&
+                      handleUnlockMission(DEFAULT_MISSIONS[1])
+                    }
+                    className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-lg transition-all keep-white"
+                  >
+                    <span>Avaliar no Google e Ganhar Benefício</span>
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                </div>
+
+                <div
+                  className={cn(
+                    'p-4 rounded-2xl border space-y-3',
+                    isLight
+                      ? 'bg-pink-50 border-pink-300'
+                      : 'bg-pink-500/10 border-pink-400/30'
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    <Instagram
+                      className={cn(
+                        'w-4 h-4 shrink-0',
+                        isLight ? 'text-pink-700' : 'text-pink-400'
+                      )}
+                    />
+                    <h4
+                      className={cn(
+                        'text-sm font-bold',
+                        isLight ? 'text-zinc-900' : 'text-white'
+                      )}
+                    >
+                      Siga & Marque no Instagram ({restaurant.instagram_handle})
+                    </h4>
+                  </div>
+                  <p
+                    className={cn(
+                      'text-xs leading-relaxed',
+                      isLight ? 'text-zinc-700' : 'text-zinc-300'
+                    )}
+                  >
+                    Acompanhe as fornadas do dia e marque nossa página nos seus
+                    Stories para repostarmos sua mesa!
+                  </p>
+                  <a
+                    href={instagramUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() =>
+                      DEFAULT_MISSIONS[0] &&
+                      handleUnlockMission(DEFAULT_MISSIONS[0])
+                    }
+                    className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-pink-600 to-amber-500 text-white text-xs font-bold flex items-center justify-center gap-2 transition-all keep-white shadow-md"
+                  >
+                    <Instagram className="w-4 h-4" />
+                    <span>Abrir Perfil no Instagram</span>
+                  </a>
+                </div>
+              </div>
             ) : (
-              <div className="p-4 rounded-2xl bg-[#0F0F0F] border border-white/15 space-y-4 text-center animate-fadeIn">
-                {rating >= 4 ? (
+              /* Filtro Protetor de Reputação: 1 a 3 estrelas -> Ouvidoria Direta com a Gerência na Mesa */
+              <div
+                className={cn(
+                  'p-4 rounded-2xl border space-y-3',
+                  isLight
+                    ? 'bg-amber-50 border-amber-300'
+                    : 'bg-amber-500/10 border-amber-400/30'
+                )}
+              >
+                <div className="flex items-center gap-2">
+                  <MessageSquareHeart
+                    className={cn(
+                      'w-4 h-4',
+                      isLight ? 'text-amber-700' : 'text-amber-400'
+                    )}
+                  />
+                  <h4
+                    className={cn(
+                      'text-sm font-bold',
+                      isLight ? 'text-zinc-900' : 'text-white'
+                    )}
+                  >
+                    Fale Direto com o Gerente Agora
+                  </h4>
+                </div>
+                <p
+                  className={cn(
+                    'text-xs leading-relaxed',
+                    isLight ? 'text-zinc-700' : 'text-zinc-300'
+                  )}
+                >
+                  Queremos que você saia 100% satisfeito ainda hoje. Conte o que
+                  houve para corrigirmos imediatamente na sua mesa:
+                </p>
+
+                {!feedbackSubmitted ? (
                   <>
-                    <div className="h-12 w-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center mx-auto text-emerald-400">
-                      <CheckCircle2 className="w-6 h-6" />
-                    </div>
-                    <div className="space-y-1">
-                      <h4 className="font-serif text-xl text-white">
-                        Muito obrigado pelo carinho!
-                      </h4>
-                      <p className="text-xs text-[#A1A1AA]">
-                        Sua nota de {rating} estrelas ajuda nossa casa a crescer
-                        no Google e no Instagram.
-                      </p>
-                    </div>
-
-                    <div className="space-y-2 pt-1">
-                      <a
-                        href={config.googleReviewUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full py-3 px-4 rounded-xl bg-white text-[#0F0F0F] font-bold text-xs flex items-center justify-center gap-2 hover:bg-zinc-200"
-                      >
-                        <Star className="w-4 h-4 fill-amber-400 text-amber-500" />
-                        <span>Publicar no Google Maps (1 Toque)</span>
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </a>
-
-                      <a
-                        href={`https://instagram.com/${config.instagramHandle.replace(
-                          /^@/,
-                          ''
-                        )}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-pink-600 to-amber-500 text-white font-bold text-xs flex items-center justify-center gap-2"
-                      >
-                        <Instagram className="w-4 h-4" />
-                        <span>
-                          Seguir & Marcar {config.instagramHandle} no Instagram
-                        </span>
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </a>
-                    </div>
+                    <textarea
+                      rows={3}
+                      value={feedbackText}
+                      onChange={(e) => setFeedbackText(e.target.value)}
+                      placeholder="Ex: Meu café demorou ou veio morno..."
+                      className={cn(
+                        'w-full p-3 rounded-xl border text-xs focus:outline-none',
+                        isLight
+                          ? 'bg-white border-zinc-300 text-zinc-900'
+                          : 'bg-[#0F0F0F] border-white/15 text-white'
+                      )}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        submitCustomerReview({
+                          tableLabel: 'Mesa 04',
+                          rating,
+                          comment: feedbackText.trim() || 'Alerta enviado à gerência',
+                          customerName: 'Cliente da Mesa',
+                          redirectedToGoogle: false,
+                          sharedOnInstagram: false,
+                        });
+                        setFeedbackSubmitted(true);
+                      }}
+                      className="w-full py-3 rounded-xl bg-amber-400 text-[#0F0F0F] text-xs font-bold"
+                    >
+                      Enviar Alerta Imediato à Gerência
+                    </button>
                   </>
                 ) : (
-                  <>
-                    <div className="h-12 w-12 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400">
-                      <ShieldCheck className="w-6 h-6" />
-                    </div>
-                    <div className="space-y-1">
-                      <h4 className="font-serif text-xl text-white">
-                        Gerência Notificada na Hora
-                      </h4>
-                      <p className="text-xs text-[#A1A1AA]">
-                        Recebemos seu feedback privado da {tableLabel}. Nosso
-                        responsável já foi avisado para cuidar pessoalmente da
-                        sua mesa.
-                      </p>
-                    </div>
-                  </>
+                  <div
+                    className={cn(
+                      'p-3 rounded-xl border text-xs font-medium',
+                      isLight
+                        ? 'bg-emerald-100 border-emerald-400 text-emerald-900'
+                        : 'bg-emerald-500/20 border-emerald-400/30 text-emerald-200'
+                    )}
+                  >
+                    Recebido! Nosso responsável já foi avisado e irá até sua
+                    mesa com uma cortesia especial.
+                  </div>
                 )}
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setReviewSubmitted(false);
-                    onClose();
-                  }}
-                  className="w-full py-2.5 rounded-xl bg-white/10 text-zinc-300 font-semibold text-xs"
-                >
-                  Voltar ao Cardápio
-                </button>
               </div>
             )}
           </div>

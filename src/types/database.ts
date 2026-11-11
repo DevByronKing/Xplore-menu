@@ -9,6 +9,8 @@ export interface MenuMediaItem {
   aspectRatio?: '9:16' | '4:5' | '1:1';
 }
 
+export type MediaAsset = MenuMediaItem;
+
 export interface ProductPhysicalDimensionsCm {
   width: number;
   height: number;
@@ -38,9 +40,11 @@ export interface Restaurant {
   instagram_handle?: string;
   google_review_url?: string;
   wifi_ssid?: string;
+  wifi_password?: string;
   whatsapp_phone?: string;
   logo_url: string;
   cover_url?: string;
+  theme_color?: string;
   theme_config: RestaurantThemeConfig;
   created_at: string;
 }
@@ -228,6 +232,7 @@ export interface TableOrder {
   couponCode?: string;
   paymentPreference: OrderPaymentPreference;
   cashChangeFor?: string;
+  waiterName?: string;
   status: TableOrderStatus;
   createdAt: string;
 }

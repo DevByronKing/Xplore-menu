@@ -52,6 +52,7 @@ interface MenuSessionContextValue {
   removeItemFromSelection: (item: MenuItem, removeAll?: boolean) => void;
   updateItemNotes: (itemId: string, notes: string) => void;
   clearSelection: () => void;
+  completeOrderSelection: () => void;
   totalSelectionCount: number;
   totalSelectionPriceCents: number;
   // Behavioral Telemetry actions & live metrics
@@ -431,6 +432,10 @@ export function MenuSessionProvider({
     setSelectedItems([]);
   }, [selectedItems, trackEvent]);
 
+  const completeOrderSelection = useCallback(() => {
+    setSelectedItems([]);
+  }, []);
+
   const totalSelectionCount = useMemo(
     () => selectedItems.reduce((acc, entry) => acc + entry.quantity, 0),
     [selectedItems]
@@ -462,6 +467,7 @@ export function MenuSessionProvider({
       removeItemFromSelection,
       updateItemNotes,
       clearSelection,
+      completeOrderSelection,
       totalSelectionCount,
       totalSelectionPriceCents,
       trackEvent,
@@ -487,6 +493,7 @@ export function MenuSessionProvider({
       removeItemFromSelection,
       updateItemNotes,
       clearSelection,
+      completeOrderSelection,
       totalSelectionCount,
       totalSelectionPriceCents,
       trackEvent,

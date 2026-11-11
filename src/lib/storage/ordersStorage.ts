@@ -6,8 +6,41 @@ import type {
 import { formatCurrencyBRL } from '@/lib/utils';
 
 const ORDERS_STORAGE_KEY = 'xplore_live_table_orders_v1';
+const CLOSED_ORDERS_IDS_KEY = 'xplore_closed_order_ids_v1';
 export const ORDERS_UPDATED_EVENT = 'xplore:orders-updated';
 const BROADCAST_CHANNEL_NAME = 'xplore_live_orders_channel_v1';
+
+const STATUS_PROGRESS_RANK: Record<TableOrderStatus, number> = {
+  novo: 0,
+  preparando: 1,
+  entregue: 2,
+};
+
+function loadClosedOrderIds(): Set<string> {
+  if (typeof window === 'undefined') return new Set();
+  try {
+    const raw = window.localStorage.getItem(CLOSED_ORDERS_IDS_KEY);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? new Set(parsed as string[]) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
+function addClosedOrderIds(ids: string[]): void {
+  if (typeof window === 'undefined' || ids.length === 0) return;
+  try {
+    const current = loadClosedOrderIds();
+    for (const id of ids) current.add(id);
+    window.localStorage.setItem(
+      CLOSED_ORDERS_IDS_KEY,
+      JSON.stringify(Array.from(current).slice(-300))
+    );
+  } catch {
+    // Ignore storage errors
+  }
+}
 
 export const PAYMENT_LABELS_PT: Record<OrderPaymentPreference, string> = {
   tab_end: 'Pagar no Final (Comanda da Mesa)',
@@ -155,25 +188,77 @@ export async function updateTableOrderStatus(
 }
 
 /**
+ * Closes/settles all active orders for a given table (Waiter Bill Settlement)
+ */
+export async function closeTableOrders(tableLabel: string): Promise<void> {
+  const normalizedTarget = tableLabel.trim().toLowerCase();
+  if (typeof window !== 'undefined') {
+    const existing = loadLocalOrders();
+    const removedIds = existing
+      .filter((o) => o.tableLabel.trim().toLowerCase() === normalizedTarget)
+      .map((o) => o.id);
+    addClosedOrderIds(removedIds);
+    const remaining = existing.filter(
+      (o) => o.tableLabel.trim().toLowerCase() !== normalizedTarget
+    );
+    saveLocalOrders(remaining);
+    window.dispatchEvent(new CustomEvent(ORDERS_UPDATED_EVENT));
+
+    if ('BroadcastChannel' in window) {
+      try {
+        const bc = new BroadcastChannel(BROADCAST_CHANNEL_NAME);
+        bc.postMessage({ type: 'TABLE_CLOSED', tableLabel });
+        bc.close();
+      } catch {
+        // Ignore
+      }
+    }
+  }
+
+  try {
+    await fetch('/api/orders', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tableLabel }),
+    });
+  } catch {
+    // Offline fallback
+  }
+}
+
+/**
  * Fetches merged orders from both the server API (/api/orders) and LocalStorage
  */
 export async function fetchMergedTableOrders(): Promise<TableOrder[]> {
   const local = loadLocalOrders();
+  const closedIds = loadClosedOrderIds();
   try {
     const res = await fetch('/api/orders', { cache: 'no-store' });
-    if (!res.ok) return local;
+    if (!res.ok) return local.filter((o) => !closedIds.has(o.id));
     const data = (await res.json()) as { orders?: TableOrder[] };
     const remote = Array.isArray(data.orders) ? data.orders : [];
 
     const byId = new Map<string, TableOrder>();
-    for (const r of remote) byId.set(r.id, r);
+    for (const r of remote) {
+      if (!closedIds.has(r.id)) {
+        byId.set(r.id, r);
+      }
+    }
     for (const l of local) {
-      // Keep local status if already updated, or merge
+      if (closedIds.has(l.id)) continue;
       const existing = byId.get(l.id);
       if (!existing) {
         byId.set(l.id, l);
       } else {
-        byId.set(l.id, { ...l, status: existing.status });
+        const bestStatus =
+          STATUS_PROGRESS_RANK[l.status] >= STATUS_PROGRESS_RANK[existing.status]
+            ? l.status
+            : existing.status;
+        byId.set(l.id, {
+          ...existing,
+          ...l,
+          status: bestStatus,
+        });
       }
     }
 
@@ -184,7 +269,7 @@ export async function fetchMergedTableOrders(): Promise<TableOrder[]> {
     saveLocalOrders(merged);
     return merged;
   } catch {
-    return local;
+    return local.filter((o) => !closedIds.has(o.id));
   }
 }
 

@@ -5,10 +5,42 @@ import {
   DEMO_TOUCHPOINTS,
 } from '@/data/mockMenuData';
 
-const CATALOG_ITEMS_KEY = 'xplore_catalog_items_v6';
-const CATALOG_CATEGORIES_KEY = 'xplore_catalog_categories_v6';
-const CATALOG_TOUCHPOINTS_KEY = 'xplore_catalog_touchpoints_v6';
+const CATALOG_ITEMS_KEY = 'xplore_catalog_items_v8';
+const CATALOG_CATEGORIES_KEY = 'xplore_catalog_categories_v8';
+const CATALOG_TOUCHPOINTS_KEY = 'xplore_catalog_touchpoints_v8';
 export const CATALOG_UPDATED_EVENT = 'xplore:catalog-updated';
+
+function normalizeItemPresentationOrder(item: MenuItem): MenuItem {
+  const defaultMatch = DEMO_MENU_ITEMS.find((d) => d.id === item.id);
+  const rawMedia = Array.isArray(item.media_urls) ? [...item.media_urls] : [];
+
+  // Enforce strict order: 1. Foto (image) -> 2. Vídeo (video) -> additional photos
+  const images = rawMedia.filter((m) => m.type === 'image');
+  const videos = rawMedia.filter((m) => m.type === 'video');
+  const orderedMedia: typeof rawMedia = [];
+
+  if (images[0]) {
+    orderedMedia.push(images[0]);
+  }
+  if (videos.length > 0) {
+    orderedMedia.push(...videos);
+  }
+  if (images.length > 1) {
+    orderedMedia.push(...images.slice(1));
+  }
+
+  return {
+    ...item,
+    media_urls: orderedMedia.length > 0 ? orderedMedia : rawMedia,
+    model_glb_url:
+      item.model_glb_url ||
+      defaultMatch?.model_glb_url ||
+      '/models/focaccia-burrata.glb?v=2',
+    dimensions_cm:
+      item.dimensions_cm ||
+      defaultMatch?.dimensions_cm || { width: 22, height: 10, depth: 22 },
+  };
+}
 
 function notifyCatalogUpdated(): void {
   if (typeof window !== 'undefined') {
@@ -17,14 +49,16 @@ function notifyCatalogUpdated(): void {
 }
 
 export function loadStoredMenuItems(fallback: MenuItem[] = DEMO_MENU_ITEMS): MenuItem[] {
-  if (typeof window === 'undefined') return fallback;
+  if (typeof window === 'undefined') return fallback.map(normalizeItemPresentationOrder);
   try {
     const raw = window.localStorage.getItem(CATALOG_ITEMS_KEY);
-    if (!raw) return fallback;
+    if (!raw) return fallback.map(normalizeItemPresentationOrder);
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length > 0 ? (parsed as MenuItem[]) : fallback;
+    return Array.isArray(parsed) && parsed.length > 0
+      ? (parsed as MenuItem[]).map(normalizeItemPresentationOrder)
+      : fallback.map(normalizeItemPresentationOrder);
   } catch {
-    return fallback;
+    return fallback.map(normalizeItemPresentationOrder);
   }
 }
 

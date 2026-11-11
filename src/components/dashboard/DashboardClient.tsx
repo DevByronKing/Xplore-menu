@@ -168,6 +168,12 @@ export function DashboardClient() {
                 )}
               </button>
               <Link
+                href="/garcom"
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-semibold"
+              >
+                <span>Garçom</span>
+              </Link>
+              <Link
                 href="/pedidos"
                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-semibold"
               >
@@ -306,6 +312,14 @@ export function DashboardClient() {
                 </>
               )}
             </button>
+
+            <Link
+              href="/garcom"
+              className="px-3.5 py-2 rounded-full bg-emerald-500/15 hover:bg-emerald-500/25 border border-amber-400/30 text-xs font-semibold text-emerald-300 flex items-center gap-1.5"
+              title="Abrir perfil e terminal de anotação de pedidos do garçom"
+            >
+              <span>Terminal Garçom (/garcom)</span>
+            </Link>
 
             <Link
               href="/pedidos"
