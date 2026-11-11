@@ -5,9 +5,9 @@ import {
   DEMO_TOUCHPOINTS,
 } from '@/data/mockMenuData';
 
-const CATALOG_ITEMS_KEY = 'xplore_catalog_items_v8';
-const CATALOG_CATEGORIES_KEY = 'xplore_catalog_categories_v8';
-const CATALOG_TOUCHPOINTS_KEY = 'xplore_catalog_touchpoints_v8';
+const CATALOG_ITEMS_KEY = 'xplore_catalog_items_v9';
+const CATALOG_CATEGORIES_KEY = 'xplore_catalog_categories_v9';
+const CATALOG_TOUCHPOINTS_KEY = 'xplore_catalog_touchpoints_v9';
 export const CATALOG_UPDATED_EVENT = 'xplore:catalog-updated';
 
 function normalizeItemPresentationOrder(item: MenuItem): MenuItem {
@@ -35,7 +35,7 @@ function normalizeItemPresentationOrder(item: MenuItem): MenuItem {
     model_glb_url:
       item.model_glb_url ||
       defaultMatch?.model_glb_url ||
-      '/models/focaccia-burrata.glb?v=2',
+      '/models/focaccia-burrata.glb?v=6',
     dimensions_cm:
       item.dimensions_cm ||
       defaultMatch?.dimensions_cm || { width: 22, height: 10, depth: 22 },

@@ -147,46 +147,12 @@ function SocialMenuInner({
         onOpenGrowthClubModal={() => setIsGrowthClubOpen(true)}
       />
 
-      {/* Feed Social Vertical com Rolagem Fluida */}
+      {/* Feed Social Vertical com Rolagem Fluida (Enquadramento Mobile-First) */}
       <main
         ref={feedContainerRef}
         className="flex-1 overflow-y-auto snap-y snap-mandatory scroll-smooth overscroll-y-contain no-scrollbar"
       >
-        <div className="max-w-[460px] mx-auto px-3 pb-28">
-          {/* Barra Guia Limpa do Cliente (Sem botão Admin exposto para o cliente!) */}
-          <div
-            className={cn(
-              'my-2 px-3.5 py-2 rounded-2xl border flex items-center justify-between gap-2 text-xs',
-              isLight
-                ? 'bg-white border-zinc-200/90 text-zinc-700 shadow-sm'
-                : 'bg-white/[0.04] border-white/[0.08] text-[#A1A1AA]'
-            )}
-          >
-            <div className="flex items-center gap-2 min-w-0">
-              <Box className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-              <span className="truncate text-[11px] font-medium">
-                Ordem: <strong>1. Foto</strong> • <strong>2. Vídeo</strong> •{' '}
-                <strong>3. 3D/AR</strong>
-              </span>
-            </div>
-
-            {restaurant.wifi_ssid && (
-              <button
-                type="button"
-                onClick={() => setIsWifiModalOpen(true)}
-                className={cn(
-                  'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold shrink-0 transition-colors',
-                  isLight
-                    ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
-                    : 'bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25'
-                )}
-              >
-                <Wifi className="w-3 h-3" />
-                <span>Wi-Fi da Mesa</span>
-              </button>
-            )}
-          </div>
-
+        <div className="max-w-[440px] mx-auto px-2.5 pt-1 pb-24">
           {/* Lista de Cards do Cardápio */}
           {filteredItems.map((item, index) => (
             <SocialProductCard

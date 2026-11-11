@@ -35,7 +35,9 @@ export interface ModelViewerJSXProps
   'ar-modes'?: string;
   'ar-scale'?: 'auto' | 'fixed';
   'ar-placement'?: 'floor' | 'wall';
+  bounds?: 'auto' | 'tight' | 'legacy';
   'camera-controls'?: boolean | '';
+  'camera-target'?: string;
   'auto-rotate'?: boolean | '';
   'auto-rotate-delay'?: string | number;
   'rotation-per-second'?: string;

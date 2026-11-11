@@ -12,6 +12,7 @@ import {
   Moon,
   Sun,
   Utensils,
+  Wifi,
 } from 'lucide-react';
 import type { Category, Restaurant } from '@/types/database';
 import { useMenuSession } from '@/context/MenuSessionContext';
@@ -43,6 +44,7 @@ export function SocialMenuHeader({
   activeCategorySlug,
   onSelectCategory,
   onOpenDrawer,
+  onOpenWifiModal,
   onOpenGrowthClubModal,
 }: SocialMenuHeaderProps) {
   const { totalSelectionCount, likedItemIds } = useMenuSession();
@@ -97,7 +99,25 @@ export function SocialMenuHeader({
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex items-center gap-1 shrink-0">
+            {/* Botão Wi-Fi Compacto */}
+            {restaurant.wifi_ssid && (
+              <button
+                type="button"
+                onClick={onOpenWifiModal}
+                aria-label="Wi-Fi da Mesa"
+                title="Wi-Fi da Mesa"
+                className={cn(
+                  'flex items-center justify-center h-8 w-8 rounded-full border transition-all active:scale-95',
+                  isLight
+                    ? 'bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100'
+                    : 'bg-emerald-500/15 border-emerald-400/30 text-emerald-300 hover:bg-emerald-500/25'
+                )}
+              >
+                <Wifi className="w-3.5 h-3.5" />
+              </button>
+            )}
+
             {/* Botão Clube VIP & Avaliação (Alto Contraste no Modo Claro e Escuro) */}
             {onOpenGrowthClubModal && (
               <button
@@ -112,7 +132,7 @@ export function SocialMenuHeader({
                 title="Clube de Benefícios & Avaliação"
               >
                 <Gift className="w-3.5 h-3.5" />
-                <span>Clube VIP</span>
+                <span>VIP</span>
               </button>
             )}
 

@@ -162,7 +162,7 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
       {
         id: 'm-1-video',
         type: 'video',
-        url: '/videos/prep-focaccia-burrata.mp4?v=5',
+        url: '/videos/prep-focaccia-burrata.mp4?v=6',
         poster:
           'https://images.unsplash.com/photo-1539252554453-80ab65ce3586?auto=format&fit=crop&w=900&q=80',
         alt: 'Vídeo profissional do preparo da Focaccia Burrata & Pistache',
@@ -194,7 +194,7 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     is_featured: true,
     sort_order: 1,
     likes_initial_count: 342,
-    model_glb_url: '/models/focaccia-burrata.glb?v=2',
+    model_glb_url: '/models/focaccia-burrata.glb?v=6',
     ar_scale_fixed: true,
     dimensions_cm: { width: 24, height: 9, depth: 18 },
   },
@@ -217,7 +217,7 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
       {
         id: 'm-2-video',
         type: 'video',
-        url: '/videos/prep-focaccia-figo.mp4?v=5',
+        url: '/videos/prep-focaccia-figo.mp4?v=6',
         poster:
           'https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?auto=format&fit=crop&w=900&q=80',
         alt: 'Vídeo profissional do preparo da Focaccia com figos e prosciutto',
@@ -248,7 +248,7 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     is_featured: true,
     sort_order: 2,
     likes_initial_count: 218,
-    model_glb_url: '/models/focaccia-figo.glb?v=2',
+    model_glb_url: '/models/focaccia-figo.glb?v=6',
     ar_scale_fixed: true,
     dimensions_cm: { width: 26, height: 8, depth: 20 },
   },
@@ -271,7 +271,7 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
       {
         id: 'm-3-video',
         type: 'video',
-        url: '/videos/prep-eggs-royale.mp4?v=5',
+        url: '/videos/prep-eggs-royale.mp4?v=6',
         poster:
           'https://images.unsplash.com/photo-1482049016688-2d3e1b311543?auto=format&fit=crop&w=900&q=80',
         alt: 'Vídeo profissional do preparo dos ovos pochê e cogumelos trufados',
@@ -301,7 +301,8 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     is_featured: true,
     sort_order: 3,
     likes_initial_count: 289,
-    model_glb_url: '/models/eggs-royale.glb?v=2',
+    model_glb_url: '/models/eggs-royale.glb?v=6',
+    model_usdz_url: '/models/eggs-royale.usdz?v=6',
     ar_scale_fixed: true,
     dimensions_cm: { width: 24, height: 8, depth: 24 },
   },
@@ -324,7 +325,7 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
       {
         id: 'm-4-video',
         type: 'video',
-        url: '/videos/prep-french-toast.mp4?v=5',
+        url: '/videos/prep-french-toast.mp4?v=6',
         poster:
           'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?auto=format&fit=crop&w=900&q=80',
         alt: 'Vídeo profissional caramelizando o brioche e finalizando com calda',
@@ -354,7 +355,8 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     is_featured: false,
     sort_order: 4,
     likes_initial_count: 194,
-    model_glb_url: '/models/french-toast.glb?v=2',
+    model_glb_url: '/models/french-toast.glb?v=6',
+    model_usdz_url: '/models/french-toast.usdz?v=6',
     ar_scale_fixed: true,
     dimensions_cm: { width: 22, height: 11, depth: 22 },
   },
@@ -377,7 +379,7 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
       {
         id: 'm-5-video',
         type: 'video',
-        url: '/videos/prep-pistachio-latte.mp4?v=5',
+        url: '/videos/prep-pistachio-latte.mp4?v=6',
         poster:
           'https://images.unsplash.com/photo-1534778101976-62847782c213?auto=format&fit=crop&w=900&q=80',
         alt: 'Vídeo profissional extraindo o espresso e desenhando o Latte Art',
@@ -406,7 +408,7 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     is_featured: true,
     sort_order: 5,
     likes_initial_count: 412,
-    model_glb_url: '/models/pistachio-latte.glb?v=2',
+    model_glb_url: '/models/pistachio-latte.glb?v=6',
     ar_scale_fixed: true,
     dimensions_cm: { width: 15, height: 10, depth: 15 },
   },
@@ -429,7 +431,7 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
       {
         id: 'm-6-video',
         type: 'video',
-        url: '/videos/prep-v60-geisha.mp4?v=5',
+        url: '/videos/prep-v60-geisha.mp4?v=6',
         poster:
           'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=900&q=80',
         alt: 'Vídeo profissional da infusão manual no método Hario V60',
@@ -456,7 +458,7 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     is_featured: false,
     sort_order: 6,
     likes_initial_count: 128,
-    model_glb_url: '/models/v60-geisha.glb?v=2',
+    model_glb_url: '/models/v60-geisha.glb?v=6',
     ar_scale_fixed: true,
     dimensions_cm: { width: 15, height: 11, depth: 15 },
   },
@@ -479,7 +481,7 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
       {
         id: 'm-7-video',
         type: 'video',
-        url: '/videos/prep-espresso-tonic.mp4?v=5',
+        url: '/videos/prep-espresso-tonic.mp4?v=6',
         poster:
           'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=900&q=80',
         alt: 'Vídeo profissional formando as camadas do Espresso Tonic',
@@ -508,7 +510,7 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     is_featured: true,
     sort_order: 7,
     likes_initial_count: 276,
-    model_glb_url: '/models/espresso-tonic.glb?v=2',
+    model_glb_url: '/models/espresso-tonic.glb?v=6',
     ar_scale_fixed: true,
     dimensions_cm: { width: 10, height: 14, depth: 10 },
   },
@@ -531,7 +533,7 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
       {
         id: 'm-8-video',
         type: 'video',
-        url: '/videos/prep-matcha-cloud.mp4?v=5',
+        url: '/videos/prep-matcha-cloud.mp4?v=6',
         poster:
           'https://images.unsplash.com/photo-1515823064-d6e0c04616a7?auto=format&fit=crop&w=900&q=80',
         alt: 'Vídeo profissional batendo o Matcha Uji com chasen de bambu',
@@ -560,7 +562,8 @@ export const DEMO_MENU_ITEMS: MenuItem[] = [
     is_featured: false,
     sort_order: 8,
     likes_initial_count: 319,
-    model_glb_url: '/models/matcha-cloud.glb?v=2',
+    model_glb_url: '/models/matcha-cloud.glb?v=6',
+    model_usdz_url: '/models/matcha-cloud.usdz?v=6',
     ar_scale_fixed: true,
     dimensions_cm: { width: 10, height: 14, depth: 10 },
   },
